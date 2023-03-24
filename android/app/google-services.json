@@ -1,0 +1,83 @@
+{
+  "project_info": {
+    "project_number": "1090664018671",
+    "firebase_url": "https://tourfriend-93f6e-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "tourfriend-93f6e",
+    "storage_bucket": "tourfriend-93f6e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1090664018671:android:31149f2fca8e748092a11a",
+        "android_client_info": {
+          "package_name": "com.alexmaudza.travel_agency_optimization"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1090664018671-r08br985btr63ksrmp51fl0crlj4jhmc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-MKmK5Sj2uzh4DZYKiHt-kWGSpyQpB-U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1090664018671-d4ae0vubb9mgcj91fg1h3o12ttm55ols.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1090664018671-7kv1r5tlju9cm1uj46cep58i4fe93of3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.travelAgencyWorkOptimization"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1090664018671:android:e0a1464d405b63e392a11a",
+        "android_client_info": {
+          "package_name": "com.example.travel_agency_work_optimization"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1090664018671-r08br985btr63ksrmp51fl0crlj4jhmc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-MKmK5Sj2uzh4DZYKiHt-kWGSpyQpB-U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1090664018671-d4ae0vubb9mgcj91fg1h3o12ttm55ols.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1090664018671-7kv1r5tlju9cm1uj46cep58i4fe93of3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.travelAgencyWorkOptimization"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
