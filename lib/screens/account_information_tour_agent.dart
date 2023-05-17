@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'change_account_data_tour_agent.dart';
 import 'start_screen.dart';
-
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 enum Sex { male, female }
 
 class AccountInformationTourAgent extends StatefulWidget {
-  const AccountInformationTourAgent({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  final String userID;
+  const AccountInformationTourAgent({super.key, required this.auth, required this.chat, required this.storage, required this.database, required this.userID});
 
   @override
   State<AccountInformationTourAgent> createState() => _AccountInformationTourAgentState();
@@ -24,7 +32,48 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
   final birthdayController = TextEditingController();
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
-  String? selectedTourCompany;
+  Map<String, dynamic>? userInfo;
+  String? name;
+  String? birthday;
+  String? phone;
+  String? email;
+  String? sex;
+  String? photo;
+  String? tourCompany;
+
+  Sex getSexOption(String sex) {
+    if (sex == "Чоловіча") {
+      return Sex.male;
+    }
+    else {
+      return Sex.female;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      userInfo = widget.database.getUserInfo(widget.userID);
+      photo = userInfo!["photo"];
+      name = userInfo!["name"];
+      birthday = userInfo!["birthday"];
+      phone = userInfo!["phone"];
+      email = userInfo!["email"];
+      sex = userInfo!["sex"];
+      tourCompany = userInfo!["tour company"];
+      _option = getSexOption(sex!);
+    });
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    birthdayController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,15 +83,15 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
         automaticallyImplyLeading: false,
       ),
       backgroundColor: Colors.grey.shade300,
-      body: SingleChildScrollView(
+      body: userInfo != null ? SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Container(
           alignment: Alignment.center,
           padding: const EdgeInsets.all(15),
           child: Column(
             children: <Widget>[
-              const CircleAvatar(
-                backgroundImage: AssetImage("assets/images/no-profile-picture-icon.png"),
+              CircleAvatar(
+                backgroundImage: NetworkImage(photo!),
                 radius: 100,
               ),
               const SizedBox(
@@ -65,7 +114,7 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
                   TextFormField(
                     keyboardType: TextInputType.name,
                     textAlign: TextAlign.start,
-                    initialValue: 'Complete the story from here...',
+                    initialValue: name!,
                     enabled: false,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
@@ -103,7 +152,7 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
                   TextFormField(
                     textAlign: TextAlign.start,
                     enabled: false,
-                    initialValue: 'Complete the story from here...',
+                    initialValue: birthday,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
                       filled: true,
@@ -162,7 +211,7 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
                     keyboardType: TextInputType.phone,
                     textAlign: TextAlign.start,
                     enabled: false,
-                    initialValue: 'Complete the story from here...',
+                    initialValue: phone!,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
                       filled: true,
@@ -200,7 +249,7 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
                     keyboardType: TextInputType.emailAddress,
                     textAlign: TextAlign.start,
                     enabled: false,
-                    initialValue: 'Complete the story from here...',
+                    initialValue: email,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
                       filled: true,
@@ -318,9 +367,9 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
                         ),
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) => value == null ? "Оберіть компанію" : null,
+                      validator: (value) => value == null ? "Туристична агенція" : null,
                       dropdownColor: Colors.white,
-                      value: selectedTourCompany,
+                      value: tourCompany,
                       onChanged: null,
                       items: const []
                   ),
@@ -338,7 +387,7 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return const ChangeAccountDataTourAgent();
+                            return ChangeAccountDataTourAgent(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, userID: widget.userID,);
                           },
                         ),
                       );
@@ -374,6 +423,9 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
                           },
                         ),
                       );
+                      widget.database.deleteDocument("Users", widget.auth.user!.uid);
+                      widget.auth.userSignOut();
+                      widget.auth.deleteUser();
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orangeAccent,
@@ -393,7 +445,8 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
             ],
           ),
         ),
-      ),
+      )
+      : Container(),
     );
   }
 }

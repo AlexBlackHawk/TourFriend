@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import '/screens/sign_in.dart';
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class AlreadyHaveAccount extends StatefulWidget {
-  const AlreadyHaveAccount({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  const AlreadyHaveAccount({super.key, required this.auth, required this.chat, required this.storage, required this.database});
 
   @override
   State<AlreadyHaveAccount> createState() => _AlreadyHaveAccountState();
@@ -24,7 +32,7 @@ class _AlreadyHaveAccountState extends State<AlreadyHaveAccount> {
               context,
               MaterialPageRoute(
                 builder: (context) {
-                  return const UserSignIn();
+                  return UserSignIn(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
                 },
               ),
             );

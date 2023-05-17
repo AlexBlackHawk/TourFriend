@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 enum HotelStar { one, two, three, four, five }
 enum HotelService { allInclude, breakfast, breakfastDinnerLunch, noFood, ultraAllInclude }
 
 class EditingTour extends StatefulWidget {
-  const EditingTour({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  final String tour;
+  const EditingTour({super.key, required this.auth, required this.chat, required this.storage, required this.database, required this.tour});
 
   @override
   State<EditingTour> createState() => _EditingTourState();
 }
 
 class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin {
-  HotelStar? _starOption;
-  HotelService? _serviceOption;
 
   List<Tab> roomsTabs = <Tab>[];
   List<Widget> roomsTabsViews = <Widget>[];
@@ -24,14 +31,97 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   List<Widget> servicesTabsViews = <Widget>[];
   List<TextEditingController> servicesDescriptionControllers = <TextEditingController>[];
 
-  List<String> imgList = [
-    'https://images.unsplash.com/photo-1520342868574-5fa3804e551c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=6ff92caffcdd63681a35134a6770ed3b&auto=format&fit=crop&w=1951&q=80',
-    'https://images.unsplash.com/photo-1522205408450-add114ad53fe?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=368f45b0888aeb0b7b08e3a1084d3ede&auto=format&fit=crop&w=1950&q=80',
-    'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=94a1e718d89ca60a6337a6008341ca50&auto=format&fit=crop&w=1950&q=80',
-    'https://images.unsplash.com/photo-1523205771623-e0faa4d2813d?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=89719a0d55dd05e2deae4120227e6efc&auto=format&fit=crop&w=1953&q=80',
-    'https://images.unsplash.com/photo-1508704019882-f9cf40e475b4?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=8c6e5e3aba713b17aa1fe71ab4f0ae5b&auto=format&fit=crop&w=1352&q=80',
-    'https://images.unsplash.com/photo-1519985176271-adb1088fa94c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=a0c8d632e977f94e5d312d9893258f59&auto=format&fit=crop&w=1355&q=80'
-  ];
+  List<String> servicesTabsName = <String>[];
+  List<String> roomsTabsName = <String>[];
+
+  Map<String, String> servicesDescription = <String, String>{};
+  Map<String, String> roomsDescription = <String, String>{};
+
+  Map<String, dynamic>? tourInfo;
+  List<Widget>? photosWidgets;
+  List<String>? photos;
+  String? name;
+  String? country;
+  String? city;
+  String? stars;
+  String? serviceType;
+  int? priceUAH;
+  int? priceUSD;
+  int? priceEUR;
+  String? aboutTour;
+  String? generalInformation;
+  // String? tourInformation;
+  Map<String, String>? servicesDescriptions;
+  Map<String, String>? roomsDescriptions;
+  Map<String, dynamic>? tourAgentInfo;
+
+  HotelStar? _starsOption; // Write logic
+  var starsString = {
+    HotelStar.one: "1",
+    HotelStar.two: "2",
+    HotelStar.three: "3",
+    HotelStar.four: "4",
+    HotelStar.five: "5",
+  };
+
+  HotelStar getStarOption(String star) {
+    if (star == "1") {
+      return HotelStar.one;
+    }
+    else if (star == "2") {
+      return HotelStar.two;
+    }
+    else if (star == "3") {
+      return HotelStar.three;
+    }
+    else if (star == "4") {
+      return HotelStar.four;
+    }
+    else {
+      return HotelStar.five;
+    }
+  }
+
+  HotelService? _serviceOption; // Write logic
+  var serviceString = {
+    HotelService.allInclude: "All Include (Все включено)",
+    HotelService.breakfast: "Сніданок",
+    HotelService.breakfastDinnerLunch: "Сніданок, обід та вечеря",
+    HotelService.noFood: "Без харчування",
+    HotelService.ultraAllInclude: "Ultra All Include",
+  };
+
+  HotelService getServiceOption(String service) {
+    if (service == "All Include (Все включено)") {
+      return HotelService.allInclude;
+    }
+    else if (service == "Сніданок") {
+      return HotelService.breakfast;
+    }
+    else if (service == "Сніданок, обід та вечеря") {
+      return HotelService.breakfastDinnerLunch;
+    }
+    else if (service == "Без харчування") {
+      return HotelService.noFood;
+    }
+    else {
+      return HotelService.ultraAllInclude;
+    }
+  }
+
+  List<Widget> imageSliders(List<String> photos) {
+    return photos.map((item) => Container(
+      margin: const EdgeInsets.all(5.0),
+      child: ClipRRect(
+          borderRadius: const BorderRadius.all(Radius.circular(5.0)),
+          child: Stack(
+            children: <Widget>[
+              Image.network(item, fit: BoxFit.cover, width: 1000.0),
+            ],
+          )),
+    ))
+        .toList();
+  }
 
   final nameController = TextEditingController();
   final priceUAHController = TextEditingController();
@@ -47,11 +137,63 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   // late String roomName;
   // late String valueText;
 
+  List<Tab> getTabs(Iterable<String> tabsNames) {
+    List<Tab> tabs = <Tab>[];
+    for (var element in tabsNames) {
+      tabs.add(Tab(text: element,));
+    }
+    return tabs;
+  }
+
+  List<Text> getTabsTexts(Iterable<String> tabsTexts) {
+    List<Text> tabs = <Text>[];
+    for (var element in tabsTexts) {
+      tabs.add(Text(element,));
+    }
+    return tabs;
+  }
+
+  void makeServiceTabs() {
+
+  }
+
+  void makeServiceTabsContent() {
+
+  }
+
+  void makeRoomTabs() {
+
+  }
+
+  void makeRoomTabsContent() {
+
+  }
+
   @override
   void initState() {
     super.initState();
-    _servicesTabController = TabController(vsync: this, length: servicesTabs.length);
-    _roomsTabController = TabController(vsync: this, length: roomsTabs.length);
+    setState(() {
+      tourInfo = widget.database.getTourInfo(widget.tour);
+      photos = tourInfo!["photos"];
+      photosWidgets = imageSliders(photos!);
+      name = tourInfo!["name"];
+      country = tourInfo!["country"];
+      city = tourInfo!["city"];
+      stars = tourInfo!["stars"];
+      serviceType = tourInfo!["service type"];
+      priceUAH = tourInfo!["price UAH"];
+      priceUSD = tourInfo!["price USD"];
+      priceEUR = tourInfo!["price EUR"];
+      aboutTour = tourInfo!["about tour"];
+      generalInformation = tourInfo!["general information"];
+      // tourInformation = tourInfo!["tour information"];
+      servicesDescriptions = tourInfo!["services descriptions"];
+      roomsDescriptions = tourInfo!["rooms descriptions"];
+      _starsOption = getStarOption(stars!);
+      _serviceOption = getServiceOption(serviceType!);
+      _servicesTabController = TabController(vsync: this, length: servicesTabs.length);
+      _roomsTabController = TabController(vsync: this, length: roomsTabs.length);
+    });
   }
 
   @override
@@ -166,14 +308,13 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
           title: const Text("ghbjlmk"),
         ),
         backgroundColor: Colors.grey.shade300,
-        body: SingleChildScrollView(
+        body: tourInfo != null ? SingleChildScrollView(
           scrollDirection: Axis.vertical,
           child: Container(
             // alignment: Alignment.center,
             padding: const EdgeInsets.all(15),
             child: Column(
               children: [
-
                 Column(
                   children: [
                     CarouselSlider(
@@ -181,7 +322,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                         aspectRatio: 2.0,
                         enlargeCenterPage: true,
                         scrollDirection: Axis.horizontal,
-                        // autoPlay: true,
                       ),
                       items: getBB(),
                     ),
@@ -202,7 +342,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                         child: const Icon(Icons.add),
                         onPressed: () {
                           setState(() {
-                            imgList.add("fhgbjnk");
+                            photos!.add("fhgbjnk");
                           });
                         },
                       ),
@@ -226,7 +366,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                     ),
                     TextFormField(
                       keyboardType: TextInputType.name,
-                      initialValue: "gfhgjbkl",
+                      initialValue: name,
                       textAlign: TextAlign.start,
                       decoration: const InputDecoration(
                         fillColor: Colors.white,
@@ -281,7 +421,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                               ),
                               TextFormField(
                                 keyboardType: TextInputType.number,
-                                initialValue: "gfhgjbkl",
+                                initialValue: priceUAH.toString(),
                                 textAlign: TextAlign.start,
                                 decoration: const InputDecoration(
                                   fillColor: Colors.white,
@@ -323,7 +463,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                               ),
                               TextFormField(
                                 keyboardType: TextInputType.number,
-                                initialValue: "gfhgjbkl",
+                                initialValue: priceUSD.toString(),
                                 textAlign: TextAlign.start,
                                 decoration: const InputDecoration(
                                   fillColor: Colors.white,
@@ -365,7 +505,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                               ),
                               TextFormField(
                                 keyboardType: TextInputType.number,
-                                initialValue: "gfhgjbkl",
+                                initialValue: priceEUR.toString(),
                                 textAlign: TextAlign.start,
                                 decoration: const InputDecoration(
                                   fillColor: Colors.white,
@@ -410,7 +550,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                     ),
                     TextFormField(
                       keyboardType: TextInputType.name,
-                      initialValue: "gfhgjbkl",
+                      initialValue: aboutTour,
                       textAlign: TextAlign.start,
                       // minLines: null,
                       maxLines: null,
@@ -449,7 +589,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                     ),
                     TextFormField(
                       keyboardType: TextInputType.name,
-                      initialValue: "gfhgjbkl",
+                      initialValue: generalInformation,
                       textAlign: TextAlign.start,
                       // expands: true,
                       // minLines: null,
@@ -473,7 +613,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                     ),
                   ],
                 ),
-
                 Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -516,7 +655,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                           ),
                           child: const Icon(Icons.add, color: Colors.white,),
                           onPressed: () {
-                            (context);
+                            _serviceNameInputDialog(context);
                           },
                         ),
                       ),
@@ -570,7 +709,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                     ),
                   ],
                 ),
-
                 const SizedBox(
                   height: 2.0,
                 ),
@@ -587,10 +725,10 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                           title: const Text("1"),
                           activeColor: Colors.black,
                           value: HotelStar.one,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -598,10 +736,10 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                           title: const Text("2"),
                           activeColor: Colors.black,
                           value: HotelStar.two,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -609,10 +747,10 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                           title: const Text("3"),
                           activeColor: Colors.black,
                           value: HotelStar.three,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -620,10 +758,10 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                           title: const Text("4"),
                           activeColor: Colors.black,
                           value: HotelStar.four,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -631,10 +769,10 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                           title: const Text("5"),
                           activeColor: Colors.black,
                           value: HotelStar.five,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -741,11 +879,12 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
             ),
           ),
         )
+            : Container(),
     );
   }
 
   List<Widget> getBB() {
-    return imgList.map((item) => Container(
+    return photos!.map((item) => Container(
       margin: const EdgeInsets.all(5.0),
       child: ClipRRect(
           borderRadius: const BorderRadius.all(Radius.circular(5.0)),
@@ -763,48 +902,17 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                       color: Colors.white,
                       onPressed: () {
                         setState(() {
-                          int itemIndex = imgList.indexOf(item);
-                          imgList[itemIndex] = "";
+                          int itemIndex = photos!.indexOf(item);
+                          photos![itemIndex] = "";
                         });
                       },
                     ),
-                    // Ink(
-                    //   decoration: const ShapeDecoration(
-                    //     color: Colors.lightBlue,
-                    //     shape: CircleBorder(),
-                    //   ),
-                    //   child: IconButton(
-                    //     icon: const Icon(Icons.create),
-                    //     color: Colors.white,
-                    //     onPressed: () {
-                    //       setState(() {
-                    //         int itemIndex = imgList.indexOf(item);
-                    //         imgList[itemIndex] = "";
-                    //       });
-                    //     },
-                    //   ),
-                    // ),
-                    // Ink(
-                    //   decoration: const ShapeDecoration(
-                    //     color: Colors.lightBlue,
-                    //     shape: CircleBorder(),
-                    //   ),
-                    //   child: IconButton(
-                    //     icon: const Icon(Icons.clear),
-                    //     color: Colors.white,
-                    //     onPressed: () {
-                    //       setState(() {
-                    //         imgList.remove(item);
-                    //       });
-                    //     },
-                    //   ),
-                    // ),
                     IconButton(
                       icon: const Icon(Icons.clear),
                       color: Colors.white,
                       onPressed: () {
                         setState(() {
-                          imgList.remove(item);
+                          photos!.remove(item);
                         });
                       },
                     ),

@@ -1,14 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class ClientReservingInfo extends StatefulWidget {
-  const ClientReservingInfo({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  final String reservingID;
+  const ClientReservingInfo({super.key, required this.auth, required this.chat, required this.storage, required this.database, required this.reservingID});
 
   @override
   State<ClientReservingInfo> createState() => _ClientReservingInfoState();
 }
 
 class _ClientReservingInfoState extends State<ClientReservingInfo> {
+  Map<String, dynamic>? reservingInfo;
+  Map<String, dynamic>? tourInfo;
+  Map<String, dynamic>? userInfo;
+  String? city;
+  String? from;
+  String? to;
+  int? nights;
+  int? adults;
+  int? children;
+  String? currency;
+  int? cost;
+  String? status;
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      reservingInfo = widget.database.getUserInfo(widget.reservingID);
+      tourInfo = widget.database.getInfoByReference(reservingInfo!["tour"]);
+      userInfo = widget.database.getInfoByReference(reservingInfo!["tour agent"]);
+      city = reservingInfo!["city"];
+      from = reservingInfo!["from"];
+      to = reservingInfo!["to"];
+      nights = reservingInfo!["nights"];
+      adults = reservingInfo!["adults"];
+      children = reservingInfo!["children"];
+      currency = reservingInfo!["currency"];
+      cost = reservingInfo!["cost"];
+      status = reservingInfo!["status"];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +58,7 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
         backgroundColor: Colors.blue,
       ),
       backgroundColor: Colors.white,
-      body: Padding(
+      body: reservingInfo != null ? Padding(
         padding: const EdgeInsets.only(left: 12, right: 12),
         child: Center(
           child: Padding(
@@ -32,8 +73,62 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                     1: FlexColumnWidth(1),
                   },
                   children: [
-                    const TableRow(children: [
+                    TableRow(children: [
+                      const Padding(
+                        padding: EdgeInsets.only(
+                          top: 16,
+                          bottom: 16,
+                          left: 11,
+                        ),
+                        child: Text("Тур", style: TextStyle(fontSize: 15.0),),
+                      ),
                       Padding(
+                        padding: const EdgeInsets.only(
+                          top: 16,
+                          bottom: 16,
+                          left: 11,
+                        ),
+                        child: Text(tourInfo!["name"], style: const TextStyle(fontSize: 15.0),),
+                      ),
+                    ]),
+                    TableRow(children: [
+                      const Padding(
+                        padding: EdgeInsets.only(
+                          top: 16,
+                          bottom: 16,
+                          left: 11,
+                        ),
+                        child: Text("ПІБ клієнта", style: TextStyle(fontSize: 15.0),),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 16,
+                          bottom: 16,
+                          left: 11,
+                        ),
+                        child: Text(userInfo!["name"], style: const TextStyle(fontSize: 15.0),),
+                      ),
+                    ]),
+                    TableRow(children: [
+                      const Padding(
+                        padding: EdgeInsets.only(
+                          top: 16,
+                          bottom: 16,
+                          left: 11,
+                        ),
+                        child: Text("Email", style: TextStyle(fontSize: 15.0),),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 16,
+                          bottom: 16,
+                          left: 11,
+                        ),
+                        child: Text(userInfo!["email"], style: const TextStyle(fontSize: 15.0),),
+                      ),
+                    ]),
+                    TableRow(children: [
+                      const Padding(
                         padding: EdgeInsets.only(
                           top: 16,
                           bottom: 16,
@@ -42,16 +137,16 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                         child: Text("Місто відправлення", style: TextStyle(fontSize: 15.0),),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(
+                        padding: const EdgeInsets.only(
                           top: 16,
                           bottom: 16,
                           left: 11,
                         ),
-                        child: Text("Київ", style: TextStyle(fontSize: 15.0),),
+                        child: Text(city!, style: const TextStyle(fontSize: 15.0),),
                       ),
                     ]),
-                    const TableRow(children: [
-                      Padding(
+                    TableRow(children: [
+                      const Padding(
                         padding: EdgeInsets.only(
                           top: 16,
                           bottom: 16,
@@ -60,16 +155,16 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                         child: Text("Виліт від", style: TextStyle(fontSize: 15.0),),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(
+                        padding: const EdgeInsets.only(
                           top: 16,
                           bottom: 16,
                           left: 11,
                         ),
-                        child: Text("12.03.2023", style: TextStyle(fontSize: 15.0),),
+                        child: Text(from!, style: const TextStyle(fontSize: 15.0),),
                       ),
                     ]),
-                    const TableRow(children: [
-                      Padding(
+                    TableRow(children: [
+                      const Padding(
                         padding: EdgeInsets.only(
                           top: 16,
                           bottom: 16,
@@ -78,16 +173,16 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                         child: Text("До", style: TextStyle(fontSize: 15.0),),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(
+                        padding: const EdgeInsets.only(
                           top: 16,
                           bottom: 16,
                           left: 11,
                         ),
-                        child: Text("24.04.2023", style: TextStyle(fontSize: 15.0),),
+                        child: Text(to!, style: const TextStyle(fontSize: 15.0),),
                       ),
                     ]),
-                    const TableRow(children: [
-                      Padding(
+                    TableRow(children: [
+                      const Padding(
                         padding: EdgeInsets.only(
                           top: 16,
                           bottom: 16,
@@ -96,16 +191,16 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                         child: Text("Ночей", style: TextStyle(fontSize: 15.0),),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(
+                        padding: const EdgeInsets.only(
                           top: 16,
                           bottom: 16,
                           left: 11,
                         ),
-                        child: Text("45", style: TextStyle(fontSize: 15.0),),
+                        child: Text(nights!.toString(), style: const TextStyle(fontSize: 15.0),),
                       ),
                     ]),
-                    const TableRow(children: [
-                      Padding(
+                    TableRow(children: [
+                      const Padding(
                         padding: EdgeInsets.only(
                           top: 16,
                           bottom: 16,
@@ -114,16 +209,16 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                         child: Text("Дорослих", style: TextStyle(fontSize: 15.0),),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(
+                        padding: const EdgeInsets.only(
                           top: 16,
                           bottom: 16,
                           left: 11,
                         ),
-                        child: Text("3", style: TextStyle(fontSize: 15.0),),
+                        child: Text(adults!.toString(), style: const TextStyle(fontSize: 15.0),),
                       ),
                     ]),
-                    const TableRow(children: [
-                      Padding(
+                    TableRow(children: [
+                      const Padding(
                         padding: EdgeInsets.only(
                           top: 16,
                           bottom: 16,
@@ -132,16 +227,16 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                         child: Text("Дітей", style: TextStyle(fontSize: 15.0),),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(
+                        padding: const EdgeInsets.only(
                           top: 16,
                           bottom: 16,
                           left: 11,
                         ),
-                        child: Text("1", style: TextStyle(fontSize: 15.0),),
+                        child: Text(children!.toString(), style: const TextStyle(fontSize: 15.0),),
                       ),
                     ]),
-                    const TableRow(children: [
-                      Padding(
+                    TableRow(children: [
+                      const Padding(
                         padding: EdgeInsets.only(
                           top: 16,
                           bottom: 16,
@@ -150,12 +245,12 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                         child: Text("Валюта", style: TextStyle(fontSize: 15.0),),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(
+                        padding: const EdgeInsets.only(
                           top: 16,
                           bottom: 16,
                           left: 11,
                         ),
-                        child: Text("Гривні", style: TextStyle(fontSize: 15.0),),
+                        child: Text(currency!, style: const TextStyle(fontSize: 15.0),),
                       ),
                     ]),
                     TableRow(children: [
@@ -173,7 +268,25 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                           bottom: 16,
                           left: 11,
                         ),
-                        child: Text(intl.NumberFormat.simpleCurrency(locale: 'uk_UA').format(45000), style: TextStyle(fontSize: 15.0),),
+                        child: Text(intl.NumberFormat.simpleCurrency(locale: 'uk_UA').format(cost!.toString()), style: const TextStyle(fontSize: 15.0),),
+                      ),
+                    ]),
+                    TableRow(children: [
+                      const Padding(
+                        padding: EdgeInsets.only(
+                          top: 16,
+                          bottom: 16,
+                          left: 11,
+                        ),
+                        child: Text("Статус", style: TextStyle(fontSize: 15.0),),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 16,
+                          bottom: 16,
+                          left: 11,
+                        ),
+                        child: Text(status!, style: const TextStyle(fontSize: 15.0),),
                       ),
                     ]),
                   ],
@@ -187,6 +300,7 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                   child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
+                        widget.database.deleteDocument("Reservings", widget.reservingID);
                       },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black,
@@ -204,7 +318,8 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
             ),
           ),
         ),
-      ),
+      )
+          : Container(),
     );
   }
 }

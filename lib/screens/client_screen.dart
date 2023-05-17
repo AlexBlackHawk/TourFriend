@@ -4,10 +4,16 @@ import 'chat_list.dart';
 import 'client_tours.dart';
 import 'tour_list.dart';
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class ClientScreen extends StatefulWidget {
-  final ProgramUser user;
-  const ClientScreen({super.key, required this.user});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  const ClientScreen({super.key, required this.auth, required this.chat, required this.storage, required this.database});
 
   @override
   State<ClientScreen> createState() => _ClientScreenState();
@@ -15,13 +21,6 @@ class ClientScreen extends StatefulWidget {
 
 class _ClientScreenState extends State<ClientScreen> {
   int _selectedIndex = 0;
-
-  static const List<Widget> _widgetOptions = <Widget>[
-    TourList(),
-    ClientTours(),
-    ChatList(widget.user),
-    AccountInformationClient(),
-  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -31,8 +30,14 @@ class _ClientScreenState extends State<ClientScreen> {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> widgetOptions = <Widget>[
+      TourList(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
+      ClientTours(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
+      ChatList(data: ,),
+      AccountInformationClient(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, userID: widget.auth.user!.uid,),
+    ];
     return Scaffold(
-      body: _widgetOptions.elementAt(_selectedIndex),
+      body: widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[

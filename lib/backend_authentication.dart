@@ -35,40 +35,24 @@ class AuthenticationBackend{
   Future<void> getUserStatus() async {
   }
 
-  Future<void> userSignUp(String email, String password) async {
-    try {
-      final credential = await authInstance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
-      } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
-      }
-    } catch (e) {
-      print(e);
-    }
+  Future<UserCredential> userSignUp(String email, String password) async {
+    final credential = await authInstance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    return credential;
   }
 
   Future<void> emailVerification(String emailAddress) async {
 
   }
 
-  Future<void> emailPasswordSignIn(String email, String password) async {
-    try {
-      final credential = await authInstance.signInWithEmailAndPassword(
-          email: email,
-          password: password
-      );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
-      }
-    }
+  Future<AuthCredential?> emailPasswordSignIn(String email, String password) async {
+    UserCredential credential = await authInstance.signInWithEmailAndPassword(
+        email: email,
+        password: password
+    );
+    return credential.credential;
   }
 
   Future<UserCredential> googleSignInUp() async {
@@ -125,13 +109,13 @@ class AuthenticationBackend{
     }
   }
 
-  Future<void> twitterSignInUp() async {
+  Future<UserCredential> twitterSignInUp() async {
     TwitterAuthProvider twitterProvider = TwitterAuthProvider();
 
     if (kIsWeb) {
-      await authInstance.signInWithPopup(twitterProvider);
+      return await authInstance.signInWithPopup(twitterProvider);
     } else {
-      await authInstance.signInWithProvider(twitterProvider);
+      return await authInstance.signInWithProvider(twitterProvider);
     }
   }
 

@@ -2,18 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'change_account_data_client.dart';
 import 'start_screen.dart';
-
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 enum Sex { male, female }
 
 class AccountInformationClient extends StatefulWidget {
-  const AccountInformationClient({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  final String userID;
+  const AccountInformationClient({super.key, required this.auth, required this.chat, required this.storage, required this.database, required this.userID});
 
   @override
   State<AccountInformationClient> createState() => _AccountInformationClientState();
 }
 
 class _AccountInformationClientState extends State<AccountInformationClient> {
-  String userSex = "Чоловіча";
+  String? userSex;
   Sex? _option; // Write logic
   var sexString = {
     Sex.male : "Чоловіча",
@@ -24,6 +32,46 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
   final birthdayController = TextEditingController();
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
+  Map<String, dynamic>? userInfo;
+  String? name;
+  String? birthday;
+  String? phone;
+  String? email;
+  String? sex;
+  String? photo;
+
+  Sex getSexOption(String sex) {
+    if (sex == "Чоловіча") {
+      return Sex.male;
+    }
+    else {
+      return Sex.female;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      userInfo = widget.database.getUserInfo(widget.userID);
+      photo = userInfo!["photo"];
+      name = userInfo!["name"];
+      birthday = userInfo!["birthday"];
+      phone = userInfo!["phone"];
+      email = userInfo!["email"];
+      sex = userInfo!["sex"];
+      _option = getSexOption(sex!);
+    });
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    birthdayController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,15 +81,15 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
         automaticallyImplyLeading: false,
       ),
       backgroundColor: Colors.grey.shade300,
-      body: SingleChildScrollView(
+      body: userInfo != null ? SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Container(
           alignment: Alignment.center,
           padding: const EdgeInsets.all(15),
           child: Column(
             children: <Widget>[
-              const CircleAvatar(
-                backgroundImage: AssetImage("assets/images/no-profile-picture-icon.png"),
+              CircleAvatar(
+                backgroundImage: NetworkImage(photo!),
                 radius: 100,
               ),
               const SizedBox(
@@ -64,7 +112,7 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
                   TextFormField(
                     keyboardType: TextInputType.name,
                     textAlign: TextAlign.start,
-                    initialValue: 'Complete the story from here...',
+                    initialValue: name!,
                     enabled: false,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
@@ -101,7 +149,7 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
                   ),
                   TextFormField(
                     textAlign: TextAlign.start,
-                    initialValue: 'Complete the story from here...',
+                    initialValue: birthday,
                     enabled: false,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
@@ -156,7 +204,7 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
                   TextFormField(
                     keyboardType: TextInputType.phone,
                     textAlign: TextAlign.start,
-                    initialValue: 'Complete the story from here...',
+                    initialValue: phone!,
                     enabled: false,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
@@ -194,7 +242,7 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
                   TextFormField(
                     keyboardType: TextInputType.emailAddress,
                     textAlign: TextAlign.start,
-                    initialValue: 'Complete the story from here...',
+                    initialValue: email,
                     enabled: false,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
@@ -299,7 +347,7 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return const ChangeAccountDataClient();
+                            return ChangeAccountDataClient(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, userID: widget.userID,);
                           },
                         ),
                       );
@@ -335,6 +383,9 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
                           },
                         ),
                       );
+                      widget.database.deleteDocument("Users", widget.auth.user!.uid);
+                      widget.auth.userSignOut();
+                      widget.auth.deleteUser();
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orangeAccent,
@@ -354,7 +405,8 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
             ],
           ),
         ),
-      ),
+      )
+      : Container(),
     );
   }
 }

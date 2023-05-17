@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import '/backend_chat.dart';
 import '../widgets/chat_list_item.dart';
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class ChatList extends StatefulWidget {
   const ChatList({super.key, required this.data});

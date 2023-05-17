@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'reserved_tours.dart';
 import 'wish_list.dart';
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class ClientTours extends StatefulWidget {
-  const ClientTours({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  const ClientTours({super.key, required this.auth, required this.chat, required this.storage, required this.database});
 
   @override
   State<ClientTours> createState() => _ClientToursState();
@@ -28,10 +36,10 @@ class _ClientToursState extends State<ClientTours> with SingleTickerProviderStat
             title: const Text("Мої тури"),
             automaticallyImplyLeading: false,
           ),
-          body: const TabBarView(
+          body: TabBarView(
             children: [
-              ReservedTours(),
-              WishList()
+              ReservedTours(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
+              WishList(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,)
             ],
           ),
         ),

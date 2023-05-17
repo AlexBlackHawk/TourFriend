@@ -1,15 +1,27 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '/widgets/app_bar_sign_in_up.dart';
 import '/widgets/or_divider.dart';
 import '/widgets/already_have_account.dart';
 import 'client_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart' as intl;
+import 'dart:io';
+import 'package:path/path.dart' as p;
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 enum Sex { male, female }
 
 class SignUpClient extends StatefulWidget {
-  const SignUpClient({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  const SignUpClient({super.key, required this.auth, required this.chat, required this.storage, required this.database});
 
   @override
   State<SignUpClient> createState() => _SignUpClientState();
@@ -22,13 +34,28 @@ class _SignUpClientState extends State<SignUpClient> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  String userSex = "Чоловіча";
+  String? userSex;
   Sex? _option; // Write logic
   var sexString = {
     Sex.male : "Чоловіча",
     Sex.female : "Жіноча"
   };
   bool alreadyProvided = true;
+  File? imageFile;
+  String imagePath = "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f";
+
+  _getFromGallery() async {
+    final XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1800,
+      maxHeight: 1800,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        imageFile = File(pickedFile.path);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -57,11 +84,18 @@ class _SignUpClientState extends State<SignUpClient> {
           child: Column(
             children: <Widget>[
               GestureDetector(
-                onTap: (){},
-                child: const CircleAvatar(
-                  backgroundImage: AssetImage("assets/images/no-profile-picture-icon.png"),
-                  radius: 100,
-                ),
+                onTap: () {
+                  _getFromGallery();
+                },
+                child: imageFile != null ?
+                  CircleAvatar(
+                    backgroundImage: FileImage(imageFile!),
+                    radius: 100,
+                  ) :
+                  const CircleAvatar(
+                    backgroundImage: AssetImage("assets/images/no-profile-picture-icon.png"),
+                    radius: 100,
+                  ),
               ),
               const SizedBox(
                 height: 10.0,
@@ -381,14 +415,54 @@ class _SignUpClientState extends State<SignUpClient> {
                 width: double.infinity,
                 child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return const ClientScreen();
-                          },
-                        ),
-                      );
+                      if (nameController.text != "" && emailController.text != "" && passwordController.text != "" && confirmPasswordController.text != "") {
+                        if (passwordController.text == confirmPasswordController.text) {
+                          final usu = widget.auth.userSignUp(emailController.text, passwordController.text);
+                          String? id;
+                          usu.then((value) {
+                            setState(() {
+                              id = value.user?.uid;
+                            });
+                          });
+                          if (nameController.text != "") {
+                            widget.auth.updateUserName(nameController.text);
+                          }
+                          String fileName = "";
+                          String filePath = "";
+                          if (imageFile != null) {
+                            String fileExtension = p.extension(imageFile!.path);
+                            if (id != null) {
+                              fileName = "$id$fileExtension";
+                              filePath = "avatars/$id$fileExtension";
+                            }
+                            widget.storage.uploadFile(filePath, imageFile!.path, fileName).then((value) {
+                              setState(() {
+                                imagePath = value;
+                                widget.auth.updatePhoto(imagePath);
+                              });
+                            });
+                          }
+                          Map<String, dynamic> userData = <String, dynamic>{
+                            "avatar": imagePath,
+                            "birthday": birthdayController.text,
+                            "favorite tours": FieldValue.arrayUnion([]),
+                            "name": nameController.text,
+                            "role": "Клієнт",
+                            "sex": userSex,
+                            "email": emailController.text,
+                            "ordered tours": FieldValue.arrayUnion([]),
+                          };
+                          id != null ? widget.database.addNewDocument("Users", userData, id) : widget.database.addNewDocument("Users", userData);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return ClientScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                              },
+                            ),
+                          );
+                        }
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orangeAccent,
@@ -408,7 +482,7 @@ class _SignUpClientState extends State<SignUpClient> {
               const SizedBox(
                 height: 30.0,
               ),
-              const AlreadyHaveAccount(),
+              AlreadyHaveAccount(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
               const SizedBox(
                 height: 12.0,
               ),
@@ -422,14 +496,31 @@ class _SignUpClientState extends State<SignUpClient> {
                 children: <Widget>[
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return const ClientScreen();
-                          },
-                        ),
-                      );
+                      final res = widget.auth.googleSignInUp();
+                      res.then((value) {
+                        if (value.credential != null) {
+                          String? avatar = widget.auth.getUserPhotoLink();
+                          Map<String, dynamic> userData = <String, dynamic>{
+                            "avatar": avatar ?? "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f",
+                            "birthday": null,
+                            "favorite tours": FieldValue.arrayUnion([]),
+                            "name": widget.auth.getUserName(),
+                            "role": "Клієнт",
+                            "sex": null,
+                            "email": widget.auth.getUserEmail(),
+                            "ordered tours": FieldValue.arrayUnion([]),
+                          };
+                          widget.database.addNewDocument("Users", userData, widget.auth.getUserID()!);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return ClientScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                              },
+                            ),
+                          );
+                        }
+                      });
                     },
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -450,14 +541,31 @@ class _SignUpClientState extends State<SignUpClient> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return const ClientScreen();
-                          },
-                        ),
-                      );
+                      final res = widget.auth.facebookSignInUp();
+                      res.then((value) {
+                        if (value.credential != null) {
+                          String? avatar = widget.auth.getUserPhotoLink();
+                          Map<String, dynamic> userData = <String, dynamic>{
+                            "avatar": avatar ?? "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f",
+                            "birthday": null,
+                            "favorite tours": FieldValue.arrayUnion([]),
+                            "name": widget.auth.getUserName(),
+                            "role": "Клієнт",
+                            "sex": null,
+                            "email": widget.auth.getUserEmail(),
+                            "ordered tours": FieldValue.arrayUnion([]),
+                          };
+                          widget.database.addNewDocument("Users", userData, widget.auth.getUserID()!);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return ClientScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                              },
+                            ),
+                          );
+                        }
+                      });
                     },
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -478,14 +586,31 @@ class _SignUpClientState extends State<SignUpClient> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return const ClientScreen();
-                          },
-                        ),
-                      );
+                      final res = widget.auth.facebookSignInUp();
+                      res.then((value) {
+                        if (value.credential != null) {
+                          String? avatar = widget.auth.getUserPhotoLink();
+                          Map<String, dynamic> userData = <String, dynamic>{
+                            "avatar": avatar ?? "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f",
+                            "birthday": null,
+                            "favorite tours": FieldValue.arrayUnion([]),
+                            "name": widget.auth.getUserName(),
+                            "role": "Клієнт",
+                            "sex": null,
+                            "email": widget.auth.getUserEmail(),
+                            "ordered tours": FieldValue.arrayUnion([]),
+                          };
+                          widget.database.addNewDocument("Users", userData, widget.auth.getUserID()!);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return ClientScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                              },
+                            ),
+                          );
+                        }
+                      });
                     },
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 10),

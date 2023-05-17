@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 //agent_tour_information,
 class DatabaseBackend extends ChangeNotifier{
-  final FirebaseFirestore db;
-  DatabaseBackend({required this.db});
+  final FirebaseFirestore db = FirebaseFirestore.instance;
+  DatabaseBackend();
 // Future<QuerySnapshot<Map<String, dynamic>>>
   Stream<QuerySnapshot> getAllTours() {
     return db.collection('Tours').snapshots();
@@ -17,10 +17,21 @@ class DatabaseBackend extends ChangeNotifier{
     CollectionReference tourCompaniesDocuments = db.collection("Tour companies");
     tourCompaniesDocuments.get().then((value) {
       for (int i = 0; i < value.size; i++) {
-        tourCompanies.add(value.docs[0].get("name"));
+        tourCompanies.add(value.docs[i].get("name"));
       }
     });
     return tourCompanies;
+  }
+
+  List<String> getAllUsersIDs() {
+    List<String> res = <String>[];
+    CollectionReference tourCompaniesDocuments = db.collection("Users");
+    tourCompaniesDocuments.get().then((value) {
+      for (int i = 0; i < value.size; i++) {
+        res.add(value.docs[i].id);
+      }
+    });
+    return res;
   }
 
   Map<String, dynamic> getUserInfo(String userID) {
@@ -59,8 +70,13 @@ class DatabaseBackend extends ChangeNotifier{
     return tourData;
   }
 
-  void addNewDocument(String collectionName, Map<String, dynamic> documentData) {
-    db.collection(collectionName).add(documentData);
+  void addNewDocument(String collectionName, Map<String, dynamic> documentData, [String? id]) {
+    if (id != null) {
+      db.collection(collectionName).doc(id).set(documentData);
+    }
+    else {
+      db.collection(collectionName).add(documentData);
+    }
   }
 
   void updateDocumentData(String collectionName, String documentID, Map<String, dynamic> updatedData) {

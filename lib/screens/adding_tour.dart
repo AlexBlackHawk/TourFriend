@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 enum HotelStar { one, two, three, four, five }
 enum HotelService { allInclude, breakfast, breakfastDinnerLunch, noFood, ultraAllInclude }
 
 class AddingTour extends StatefulWidget {
-  const AddingTour({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  const AddingTour({super.key, required this.auth, required this.chat, required this.storage, required this.database});
 
   @override
   State<AddingTour> createState() => _AddingTourState();
 }
 
 class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
-  HotelStar? _starOption;
-  HotelService? _serviceOption;
 
   List<Tab> roomsTabs = <Tab>[];
   List<Widget> roomsTabsViews = <Widget>[];
@@ -23,14 +29,67 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
   List<Widget> servicesTabsViews = <Widget>[];
   List<TextEditingController> servicesDescriptionControllers = <TextEditingController>[];
 
-  List<String> imgList = [
-    // 'https://images.unsplash.com/photo-1520342868574-5fa3804e551c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=6ff92caffcdd63681a35134a6770ed3b&auto=format&fit=crop&w=1951&q=80',
-    // 'https://images.unsplash.com/photo-1522205408450-add114ad53fe?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=368f45b0888aeb0b7b08e3a1084d3ede&auto=format&fit=crop&w=1950&q=80',
-    // 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=94a1e718d89ca60a6337a6008341ca50&auto=format&fit=crop&w=1950&q=80',
-    // 'https://images.unsplash.com/photo-1523205771623-e0faa4d2813d?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=89719a0d55dd05e2deae4120227e6efc&auto=format&fit=crop&w=1953&q=80',
-    // 'https://images.unsplash.com/photo-1508704019882-f9cf40e475b4?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=8c6e5e3aba713b17aa1fe71ab4f0ae5b&auto=format&fit=crop&w=1352&q=80',
-    // 'https://images.unsplash.com/photo-1519985176271-adb1088fa94c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=a0c8d632e977f94e5d312d9893258f59&auto=format&fit=crop&w=1355&q=80'
-  ];
+  List<String> servicesTabsName = <String>[];
+  List<String> roomsTabsName = <String>[];
+
+  Map<String, String> servicesDescription = <String, String>{};
+  Map<String, String> roomsDescription = <String, String>{};
+
+  List<String> imgList = <String>[];
+
+  HotelStar? _starsOption; // Write logic
+  var starsString = {
+    HotelStar.one: "1",
+    HotelStar.two: "2",
+    HotelStar.three: "3",
+    HotelStar.four: "4",
+    HotelStar.five: "5",
+  };
+
+  HotelStar getStarOption(String star) {
+    if (star == "1") {
+      return HotelStar.one;
+    }
+    else if (star == "2") {
+      return HotelStar.two;
+    }
+    else if (star == "3") {
+      return HotelStar.three;
+    }
+    else if (star == "4") {
+      return HotelStar.four;
+    }
+    else {
+      return HotelStar.five;
+    }
+  }
+
+  HotelService? _serviceOption; // Write logic
+  var serviceString = {
+    HotelService.allInclude: "All Include (Все включено)",
+    HotelService.breakfast: "Сніданок",
+    HotelService.breakfastDinnerLunch: "Сніданок, обід та вечеря",
+    HotelService.noFood: "Без харчування",
+    HotelService.ultraAllInclude: "Ultra All Include",
+  };
+
+  HotelService getServiceOption(String service) {
+    if (service == "All Include (Все включено)") {
+      return HotelService.allInclude;
+    }
+    else if (service == "Сніданок") {
+      return HotelService.breakfast;
+    }
+    else if (service == "Сніданок, обід та вечеря") {
+      return HotelService.breakfastDinnerLunch;
+    }
+    else if (service == "Без харчування") {
+      return HotelService.noFood;
+    }
+    else {
+      return HotelService.ultraAllInclude;
+    }
+  }
 
   final nameController = TextEditingController();
   final priceUAHController = TextEditingController();
@@ -38,6 +97,7 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
   final priceEURController = TextEditingController();
   final descriptionController = TextEditingController();
   final generalInfoController = TextEditingController();
+  final servicesNameController = TextEditingController();
   final servicesController = TextEditingController();
   final roomNameController = TextEditingController();
   late TabController _servicesTabController;
@@ -62,6 +122,7 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
     descriptionController.dispose();
     generalInfoController.dispose();
     servicesController.dispose();
+    servicesNameController.dispose();
     roomNameController.dispose();
     _servicesTabController.dispose();
     _roomsTabController.dispose();
@@ -113,6 +174,59 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
             ],
           );
         });
+  }
+
+  Future<void> _serviceNameInputDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('TextField in Dialog'),
+            content: TextField(
+              // onChanged: (value) {
+              //   setState(() {
+              //     valueText = value;
+              //   });
+              // },
+              controller: servicesNameController,
+              decoration: const InputDecoration(hintText: "Text Field in Dialog"),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('CANCEL'),
+                onPressed: () {
+                  setState(() {
+                    Navigator.pop(context);
+                  });
+                },
+              ),
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  setState(() {
+                    // roomName = valueText;
+                    addServiceTab(); // roomName
+                    addServiceTabBarView();
+                    Navigator.pop(context);
+                  });
+                },
+              ),
+
+            ],
+          );
+        });
+  }
+
+  void setServices() {
+    for (int i = 0; i < servicesTabs.length; i++) {
+      servicesDescription[servicesTabsName[i]] = servicesDescriptionControllers[i].text;
+    }
+  }
+
+  void setRooms() {
+    for (int i = 0; i < roomsTabs.length; i++) {
+      roomsDescription[roomsTabsName[i]] = roomsDescriptionControllers[i].text;
+    }
   }
 
   @override
@@ -466,7 +580,7 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                           ),
                           child: const Icon(Icons.add, color: Colors.white,),
                           onPressed: () {
-                            _roomNameInputDialog(context);
+                            _serviceNameInputDialog(context);
                           },
                         ),
                       ),
@@ -537,10 +651,10 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                           title: const Text("1"),
                           activeColor: Colors.black,
                           value: HotelStar.one,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -548,10 +662,10 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                           title: const Text("2"),
                           activeColor: Colors.black,
                           value: HotelStar.two,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -559,10 +673,10 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                           title: const Text("3"),
                           activeColor: Colors.black,
                           value: HotelStar.three,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -570,10 +684,10 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                           title: const Text("4"),
                           activeColor: Colors.black,
                           value: HotelStar.four,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -581,10 +695,10 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                           title: const Text("5"),
                           activeColor: Colors.black,
                           value: HotelStar.five,
-                          groupValue: _starOption,
+                          groupValue: _starsOption,
                           onChanged: (HotelStar? value) {
                             setState(() {
-                              _starOption = value;
+                              _starsOption = value;
                             });
                           },
                         ),
@@ -670,6 +784,23 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                   width: double.infinity,
                   child: ElevatedButton(
                       onPressed: () {
+                        String userID = widget.auth.user!.uid;
+
+                        Map<String, dynamic> tourInfo = <String, dynamic>{
+                          "photos": imgList,
+                          "name": nameController.text,
+                          "price UAH": priceUAHController.text,
+                          "price USD": priceUSDController.text,
+                          "price EUR": priceEURController.text,
+                          "tour information": descriptionController.text,
+                          "general information": generalInfoController.text,
+                          "services": servicesDescription,
+                          "rooms": roomsDescription,
+                          "food": serviceString[_serviceOption],
+                          "stars": starsString[_starsOption],
+                          "tour agent": widget.database.db.doc("Users/$userID"),
+                        };
+                        widget.database.addNewDocument("Tours", tourInfo);
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
@@ -718,37 +849,6 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                         });
                       },
                     ),
-                    // Ink(
-                    //   decoration: const ShapeDecoration(
-                    //     color: Colors.lightBlue,
-                    //     shape: CircleBorder(),
-                    //   ),
-                    //   child: IconButton(
-                    //     icon: const Icon(Icons.create),
-                    //     color: Colors.white,
-                    //     onPressed: () {
-                    //       setState(() {
-                    //         int itemIndex = imgList.indexOf(item);
-                    //         imgList[itemIndex] = "";
-                    //       });
-                    //     },
-                    //   ),
-                    // ),
-                    // Ink(
-                    //   decoration: const ShapeDecoration(
-                    //     color: Colors.lightBlue,
-                    //     shape: CircleBorder(),
-                    //   ),
-                    //   child: IconButton(
-                    //     icon: const Icon(Icons.clear),
-                    //     color: Colors.white,
-                    //     onPressed: () {
-                    //       setState(() {
-                    //         imgList.remove(item);
-                    //       });
-                    //     },
-                    //   ),
-                    // ),
                     IconButton(
                       icon: const Icon(Icons.clear),
                       color: Colors.white,
@@ -769,7 +869,9 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
 
   void addRoomTab() { // String roomName
     // Tab roomTab = const Tab(text: 'Address');
-    roomsTabs.add(Tab(text: roomNameController.text));
+    String roomTabName = roomNameController.text;
+    roomsTabsName.add(roomTabName);
+    roomsTabs.add(Tab(text: roomTabName));
   }
 
   void addRoomTabBarView() {
@@ -786,6 +888,38 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
             border: OutlineInputBorder(),
           ),
           controller: newRoomController,
+        )
+    );
+  }
+
+  void addServiceTab() { // String roomName
+    // Tab roomTab = const Tab(text: 'Address');
+    String serviceTabName = servicesNameController.text;
+    servicesTabsName.add(serviceTabName);
+    servicesTabs.add(Tab(text: serviceTabName));
+  }
+
+  void addServiceTabBarView() {
+    TextEditingController newServicesController = TextEditingController();
+    servicesDescriptionControllers.add(newServicesController);
+    servicesTabsViews.add(
+        TextFormField(
+          keyboardType: TextInputType.name,
+          initialValue: "gfhgjbkl",
+          textAlign: TextAlign.start,
+          decoration: const InputDecoration(
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.white,
+              ),
+            ),
+            border: OutlineInputBorder(),
+          ),
+          cursorColor: Colors.black,
+          controller: newServicesController,
         )
     );
   }

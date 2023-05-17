@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'tours_added_by_agent.dart';
 import 'agent_tours_reserved_by_clients.dart';
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class TourAgentTours extends StatefulWidget {
-  const TourAgentTours({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  const TourAgentTours({super.key, required this.auth, required this.chat, required this.storage, required this.database});
 
   @override
   State<TourAgentTours> createState() => _TourAgentToursState();
@@ -27,10 +35,10 @@ class _TourAgentToursState extends State<TourAgentTours> {
             title: const Text("fghbjkml;"),
             automaticallyImplyLeading: false,
           ),
-          body: const TabBarView(
+          body: TabBarView(
             children: [
-              ToursAddedAgent(),
-              AgentToursReservedClients()
+              ToursAddedAgent(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
+              AgentToursReservedClients(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,)
             ],
           ),
         ),

@@ -5,9 +5,17 @@ import '/widgets/does_not_have_account.dart';
 import 'client_screen.dart';
 import 'tour_agent_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class UserSignIn extends StatefulWidget {
-  const UserSignIn({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  const UserSignIn({super.key, required this.auth, required this.chat, required this.storage, required this.database});
 
   @override
   State<UserSignIn> createState() => _UserSignInState();
@@ -16,6 +24,7 @@ class UserSignIn extends StatefulWidget {
 class _UserSignInState extends State<UserSignIn> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  // final authenticate = AuthenticationBackend();
 
   @override
   void dispose() {
@@ -130,14 +139,33 @@ class _UserSignInState extends State<UserSignIn> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return const ClientScreen();
-                      },
-                    ),
-                  );
+                  if (emailController.text != "" && passwordController.text != "") {
+                    final res = widget.auth.emailPasswordSignIn(emailController.text, passwordController.text);
+                    res.then((value) {
+                      if (value != null) {
+                        if (widget.database.getUserInfo(widget.auth.getUserID()!)["role"] == "Клієнт") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return ClientScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                              },
+                            ),
+                          );
+                        }
+                        else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return TourAgentScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                              },
+                            ),
+                          );
+                        }
+                      }
+                    });
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orangeAccent,
@@ -157,7 +185,7 @@ class _UserSignInState extends State<UserSignIn> {
             const SizedBox(
               height: 30.0,
             ),
-            const DoesNotHaveAccount(),
+            DoesNotHaveAccount(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
             const SizedBox(
               height: 12.0,
             ),
@@ -166,19 +194,41 @@ class _UserSignInState extends State<UserSignIn> {
               height: 12.0,
             ),
             Row(
-              // textDirection: TextDirection.ltr,
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return const ClientScreen();
-                        },
-                      ),
-                    );
+                    // authenticate.googleSignInUp();
+                    final res = widget.auth.googleSignInUp();
+                    res.then((value) {
+                      if (value.credential != null) {
+                        if (widget.database.getAllUsersIDs().contains(widget.auth.getUserID()!)) {
+                          if (widget.database.getUserInfo(widget.auth.getUserID()!)["role"] == "Клієнт") {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return ClientScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                                },
+                              ),
+                            );
+                          }
+                          else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return TourAgentScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                                },
+                              ),
+                            );
+                          }
+                        }
+                        else {
+                          widget.auth.deleteUser();
+                        }
+                      }
+                    });
                   },
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -199,14 +249,37 @@ class _UserSignInState extends State<UserSignIn> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return const TourAgentScreen();
-                        },
-                      ),
-                    );
+                    // authenticate.facebookSignInUp();
+                    final res = widget.auth.facebookSignInUp();
+                    res.then((value) {
+                      if (value.credential != null) {
+                        if (widget.database.getAllUsersIDs().contains(widget.auth.getUserID()!)) {
+                          if (widget.database.getUserInfo(widget.auth.getUserID()!)["role"] == "Клієнт") {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return ClientScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                                },
+                              ),
+                            );
+                          }
+                          else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return TourAgentScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                                },
+                              ),
+                            );
+                          }
+                        }
+                        else {
+                          widget.auth.deleteUser();
+                        }
+                      }
+                    });
                   },
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -227,14 +300,37 @@ class _UserSignInState extends State<UserSignIn> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return const TourAgentScreen();
-                        },
-                      ),
-                    );
+                    // authenticate.twitterSignInUp();
+                    final res = widget.auth.twitterSignInUp();
+                    res.then((value) {
+                      if (value.credential != null) {
+                        if (widget.database.getAllUsersIDs().contains(widget.auth.getUserID()!)) {
+                          if (widget.database.getUserInfo(widget.auth.getUserID()!)["role"] == "Клієнт") {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return ClientScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                                },
+                              ),
+                            );
+                          }
+                          else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return TourAgentScreen(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
+                                },
+                              ),
+                            );
+                          }
+                        }
+                        else {
+                          widget.auth.deleteUser();
+                        }
+                      }
+                    });
                   },
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 10),

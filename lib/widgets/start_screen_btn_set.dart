@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import '/screens/sign_up_options.dart';
 import '/screens/sign_in.dart';
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class StartScreenButtons extends StatefulWidget {
-  const StartScreenButtons({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+
+  const StartScreenButtons({super.key, required this.auth, required this.chat, required this.storage, required this.database});
 
   @override
   State<StartScreenButtons> createState() => _StartScreenButtonsState();
@@ -38,7 +47,7 @@ class _StartScreenButtonsState extends State<StartScreenButtons> {
                   context,
                   MaterialPageRoute(
                     builder: (context) {
-                      return const UserSignIn();
+                      return UserSignIn(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
                     },
                   ),
                 );
@@ -68,7 +77,7 @@ class _StartScreenButtonsState extends State<StartScreenButtons> {
                   context,
                   MaterialPageRoute(
                     builder: (context) {
-                      return const SignUpOptions();
+                      return SignUpOptions(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
                     },
                   ),
                 );

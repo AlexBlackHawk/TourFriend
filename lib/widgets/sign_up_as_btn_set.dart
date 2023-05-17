@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import '/screens/sign_up_client.dart';
 import '/screens/sign_up_tour_agent.dart';
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class SignUpAsButtons extends StatefulWidget {
-  const SignUpAsButtons({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  const SignUpAsButtons({super.key, required this.auth, required this.chat, required this.storage, required this.database});
 
   @override
   State<SignUpAsButtons> createState() => _SignUpAsButtonsState();
@@ -37,7 +45,7 @@ class _SignUpAsButtonsState extends State<SignUpAsButtons> {
                   context,
                   MaterialPageRoute(
                     builder: (context) {
-                      return const SignUpClient();
+                      return SignUpClient(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
                     },
                   ),
                 );
@@ -66,7 +74,7 @@ class _SignUpAsButtonsState extends State<SignUpAsButtons> {
                   context,
                   MaterialPageRoute(
                     builder: (context) {
-                      return const SignUpTourAgent();
+                      return SignUpTourAgent(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,);
                     },
                   ),
                 );

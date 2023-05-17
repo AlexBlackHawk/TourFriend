@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 class ReservingTour extends StatefulWidget {
-  const ReservingTour({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  final String tourID;
+  const ReservingTour({super.key, required this.auth, required this.chat, required this.storage, required this.database, required this.tourID});
 
   @override
   State<ReservingTour> createState() => _ReservingTourState();
@@ -13,15 +22,18 @@ class _ReservingTourState extends State<ReservingTour> {
   final departureCityController = TextEditingController();
   final dateFromController = TextEditingController();
   final dateToController = TextEditingController();
+  Map<String, dynamic>? tourInfo;
   String? selectedCurrency;
   double? nights;
   double? adults;
   double? children;
-  Map<String, double> prices = {
-    "Гривні": 900,
-    "Долари": 1200,
-    "Євро": 1500
-  };
+  Map<String, double>? prices;
+  // = {
+  //   "Гривні": 900,
+  //   "Долари": 1200,
+  //   "Євро": 1500
+  // };
+  double? cost;
 
   List<String> currencies() {
     return ["Гривні", "Долари", "Євро"];
@@ -43,6 +55,19 @@ class _ReservingTourState extends State<ReservingTour> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    setState(() {
+      tourInfo = widget.database.getTourInfo(widget.tourID);
+      prices = {
+        "Гривні": tourInfo!["price UAH"],
+        "Долари": tourInfo!["price USD"],
+        "Євро": tourInfo!["price EUR"]
+      };
+    });
+  }
+
+  @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
     departureCityController.dispose();
@@ -56,7 +81,7 @@ class _ReservingTourState extends State<ReservingTour> {
     return Scaffold(
       appBar: getAppBar(context),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
+      body: tourInfo != null ? SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Container(
           alignment: Alignment.center,
@@ -368,11 +393,30 @@ class _ReservingTourState extends State<ReservingTour> {
                 width: double.infinity,
                 child: ElevatedButton(
                     onPressed: () {
+
+                      String userID = widget.auth.user!.uid;
+                      String tourID = widget.tourID;
+
+                      Map<String, dynamic> reserveParameters = <String, dynamic>{
+                        "client": widget.database.db.doc("Users/$userID"),
+                        "tour agent": tourInfo!["tour agent"],
+                        "city": departureCityController.text,
+                        "from": dateFromController.text,
+                        "to": dateToController.text,
+                        "nights": nights,
+                        "adults": adults,
+                        "children": children,
+                        "currency": selectedCurrency,
+                        "cost": cost,
+                        "tour": widget.database.db.doc("Users/$tourID"),
+                        "status": "Не підтверджено",
+                      };
+                      widget.database.addNewDocument("Reservations", reserveParameters);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return const ReservingTour();
+                            return ReservingTour(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tourID: widget.tourID,);
                           },
                         ),
                       );
@@ -395,7 +439,8 @@ class _ReservingTourState extends State<ReservingTour> {
             ],
           ),
         ),
-      ),
+      )
+      : Container(),
     );
   }
 

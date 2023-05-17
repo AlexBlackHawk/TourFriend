@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:travel_agency_work_optimization/backend_authentication.dart';
+import 'package:travel_agency_work_optimization/backend_chat.dart';
+import 'package:travel_agency_work_optimization/backend_storage.dart';
+import 'package:travel_agency_work_optimization/backend_database.dart';
 
 enum Sex { male, female }
 
 class ChangeAccountDataTourAgent extends StatefulWidget {
-  const ChangeAccountDataTourAgent({super.key});
+  final AuthenticationBackend auth;
+  final ChatBackend chat;
+  final StorageBackend storage;
+  final DatabaseBackend database;
+  final String userID;
+  const ChangeAccountDataTourAgent({super.key, required this.auth, required this.chat, required this.storage, required this.database, required this.userID});
 
   @override
   State<ChangeAccountDataTourAgent> createState() => _ChangeAccountDataTourAgentState();
@@ -24,7 +33,39 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  String? selectedTourCompany;
+  Map<String, dynamic>? userInfo;
+  String? name;
+  String? birthday;
+  String? phone;
+  String? email;
+  String? sex;
+  String? photo;
+  String? tourCompany;
+
+  Sex getSexOption(String sex) {
+    if (sex == "Чоловіча") {
+      return Sex.male;
+    }
+    else {
+      return Sex.female;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      userInfo = widget.database.getUserInfo(widget.userID);
+      photo = userInfo!["photo"];
+      name = userInfo!["name"];
+      birthday = userInfo!["birthday"];
+      phone = userInfo!["phone"];
+      email = userInfo!["email"];
+      sex = userInfo!["sex"];
+      tourCompany = userInfo!["tour company"];
+      _option = getSexOption(sex!);
+    });
+  }
 
   @override
   void dispose() {
@@ -45,7 +86,7 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
         title: const Text("ghbjlmk"),
       ),
       backgroundColor: Colors.grey.shade300,
-      body: SingleChildScrollView(
+      body: userInfo != null ? SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Container(
           alignment: Alignment.center,
@@ -54,8 +95,8 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
             children: <Widget>[
               GestureDetector(
                 onTap: (){},
-                child: const CircleAvatar(
-                  backgroundImage: AssetImage("assets/images/no-profile-picture-icon.png"),
+                child: CircleAvatar(
+                  backgroundImage: NetworkImage(photo!),
                   radius: 100,
                 ),
               ),
@@ -76,9 +117,10 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                   const SizedBox(
                     height: 5,
                   ),
-                  TextField(
+                  TextFormField(
                     keyboardType: TextInputType.name,
                     textAlign: TextAlign.start,
+                    initialValue: name!,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
                       filled: true,
@@ -112,8 +154,9 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                   const SizedBox(
                     height: 5,
                   ),
-                  TextField(
+                  TextFormField(
                     textAlign: TextAlign.start,
+                    initialValue: birthday,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
                       filled: true,
@@ -168,9 +211,10 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                   const SizedBox(
                     height: 5,
                   ),
-                  TextField(
+                  TextFormField(
                     keyboardType: TextInputType.phone,
                     textAlign: TextAlign.start,
+                    initialValue: phone!,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
                       filled: true,
@@ -204,9 +248,10 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                   const SizedBox(
                     height: 5,
                   ),
-                  TextField(
+                  TextFormField(
                     keyboardType: TextInputType.emailAddress,
                     textAlign: TextAlign.start,
+                    initialValue: email,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
                       filled: true,
@@ -398,12 +443,12 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                         ),
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) => value == null ? "Оберіть компанію" : null,
+                      validator: (value) => value == null ? "Туристичне агентство" : null,
                       dropdownColor: Colors.white,
-                      value: selectedTourCompany,
+                      value: tourCompany,
                       onChanged: (String? newValue) {
                         setState(() {
-                          selectedTourCompany = newValue!;
+                          tourCompany = newValue!;
                         });
                       },
                       items: travelCompaniesDropdown()
@@ -438,7 +483,8 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
             ],
           ),
         ),
-      ),
+      )
+      : Container(),
     );
   }
 

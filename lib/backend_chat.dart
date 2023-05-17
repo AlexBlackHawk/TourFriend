@@ -19,9 +19,8 @@ class MessageChat {
 }
 
 class ChatBackend extends ChangeNotifier {
-  final FirebaseFirestore db;
-
-  ChatBackend({required this.db});
+  final FirebaseFirestore db = FirebaseFirestore.instance;
+  ChatBackend();
 
   Stream<QuerySnapshot> getMessageWithChatroomID(String roomID) {
     return db
