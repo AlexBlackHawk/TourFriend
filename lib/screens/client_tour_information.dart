@@ -44,6 +44,12 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
   Map<String, String>? roomsDescriptions;
   Map<String, dynamic>? tourAgentInfo;
 
+  List<Tab> roomsTabs = <Tab>[];
+  List<Widget> roomsTabsViews = <Widget>[];
+
+  List<Tab> servicesTabs = <Tab>[];
+  List<Widget> servicesTabsViews = <Widget>[];
+
   HotelStar? _starsOption; // Write logic
   var starsString = {
     HotelStar.one: "1",
@@ -157,7 +163,88 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
       tourAgentInfo = widget.database.getInfoByReference(tourAgent!);
       _servicesTabController = TabController(vsync: this, length: servicesDescriptions!.length);
       _roomsTabController = TabController(vsync: this, length: roomsDescriptions!.length);
+      makeServiceTabs();
+      makeRoomTabs();
     });
+  }
+
+  void makeServiceTabs() {
+    servicesDescriptions!.forEach((key, value) {
+      addServiceTab(key);
+      addServiceTabBarView(value);
+    });
+  }
+
+  void makeRoomTabs() {
+    roomsDescriptions!.forEach((key, value) {
+      addRoomTab(key);
+      addRoomTabBarView(value);
+    });
+  }
+
+  void addRoomTab(String tabName) { // String roomName
+    // Tab roomTab = const Tab(text: 'Address');
+    // roomsTabsName.add(tabName);
+    roomsTabs.add(Tab(text: tabName));
+  }
+
+  void addRoomTabBarView(String tabContent) {
+    // TextEditingController newRoomController = TextEditingController();
+    // roomsDescriptionControllers.add(newRoomController);
+    roomsTabsViews.add(
+        TextFormField(
+          keyboardType: TextInputType.name,
+          initialValue: tabContent,
+          readOnly: true,
+          textAlign: TextAlign.start,
+          decoration: const InputDecoration(
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.white,
+              ),
+            ),
+            border: OutlineInputBorder(),
+          ),
+          cursorColor: Colors.black,
+          // controller: newRoomController,
+        )
+    );
+  }
+
+  void addServiceTab(String tabName) { // String roomName
+    // Tab roomTab = const Tab(text: 'Address');
+    // String serviceTabName = servicesNameController.text;
+    // servicesTabsName.add(tabName);
+    servicesTabs.add(Tab(text: tabName));
+  }
+
+  void addServiceTabBarView(String tabContent) {
+    // TextEditingController newServicesController = TextEditingController();
+    // servicesDescriptionControllers.add(newServicesController);
+    servicesTabsViews.add(
+        TextFormField(
+          keyboardType: TextInputType.name,
+          initialValue: tabContent,
+          textAlign: TextAlign.start,
+          readOnly: true,
+          decoration: const InputDecoration(
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.white,
+              ),
+            ),
+            border: OutlineInputBorder(),
+          ),
+          cursorColor: Colors.black,
+          // controller: newServicesController,
+        )
+    );
   }
 
   @override
@@ -422,7 +509,7 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
                     color: Colors.white,
                     child: Row(
                         children: <Widget> [
-                          const Expanded(child:Image(image: NetworkImage("https://this-person-does-not-exist.com/gen/avatar-1140910d77f103ce53aad9947e6ce90f.jpg"), fit: BoxFit.cover,),),
+                          Expanded(child:Image(image: NetworkImage(tourAgentInfo!["avatar"]), fit: BoxFit.cover,),),
                           Expanded(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -456,11 +543,18 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
                           )
                       ),
                       onPressed: () {
+                        String? chatRoom = widget.chat.getChatRoomID(widget.auth.user!.uid, tourAgent!.id);
+                        Map<String, dynamic> chatData = <String, dynamic>{
+                          'users': [widget.auth.user!.uid, tourAgent!.id],
+                          'last message': null,
+                          'time': null,
+                        };
+                        chatRoom ??= widget.chat.addChatRoom(chatData);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) {
-                              return Chat();
+                              return Chat(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, chatRoomId: chatRoom!,);
                             },
                           ),
                         );

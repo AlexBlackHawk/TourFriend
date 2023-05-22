@@ -412,14 +412,10 @@ class _ReservingTourState extends State<ReservingTour> {
                         "status": "Не підтверджено",
                       };
                       widget.database.addNewDocument("Reservations", reserveParameters);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return ReservingTour(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tourID: widget.tourID,);
-                          },
-                        ),
+                      const snackBar = SnackBar(
+                        content: Text('Заявку створено. Очікуйте підтвердження від туристичного агента'),
                       );
+                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orangeAccent,

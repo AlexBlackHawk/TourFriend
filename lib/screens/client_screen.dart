@@ -33,7 +33,7 @@ class _ClientScreenState extends State<ClientScreen> {
     List<Widget> widgetOptions = <Widget>[
       TourList(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
       ClientTours(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
-      ChatList(data: ,),
+      ChatList(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
       AccountInformationClient(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, userID: widget.auth.user!.uid,),
     ];
     return Scaffold(

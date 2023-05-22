@@ -683,7 +683,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
   }
 
   List<String> travelCompanies() {
-    return ["ghbfmcdkls", "cfgvhbjnk", "jnyhbtgvrf", "bhtgrvfd", "bgfvsdc"];
+    return widget.database.getAllTourCompanies();
   }
 
   List<DropdownMenuItem<String>> travelCompaniesDropdown() {

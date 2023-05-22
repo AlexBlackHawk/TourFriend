@@ -8,16 +8,16 @@ import 'package:image_picker/image_picker.dart';
 import 'firebase_options.dart';
 
 class StorageBackend{
-  final storageRef = FirebaseStorage.instance.ref();
+  final storageIns = FirebaseStorage.instance;
 
   Future<String> uploadFile(String pathInStorage, String pathToFile, String fileName) async {
     File file = File(pathToFile);
-    var snapshot = await storageRef.child(pathInStorage).child(fileName).putFile(file);
+    var snapshot = await storageIns.ref().child(pathInStorage).child(fileName).putFile(file);
     String downloadUrl = await snapshot.ref.getDownloadURL();
     return downloadUrl;
   }
 
   Future<void> deleteFile(String fileReference) async {
-    await storageRef.delete();
+    await storageIns.refFromURL(fileReference).delete();
   }
 }

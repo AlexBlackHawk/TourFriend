@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
@@ -21,6 +22,7 @@ class TourAgentReservingInfo extends StatefulWidget {
 class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
   Map<String, dynamic>? reservingInfo;
   Map<String, dynamic>? tourInfo;
+  DocumentReference? client;
   Map<String, dynamic>? userInfo;
   String? city;
   String? from;
@@ -36,9 +38,10 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
   void initState() {
     super.initState();
     setState(() {
-      reservingInfo = widget.database.getUserInfo(widget.reservingID);
+      reservingInfo = widget.database.getReservingInfo(widget.reservingID);
       tourInfo = widget.database.getInfoByReference(reservingInfo!["tour"]);
-      userInfo = widget.database.getInfoByReference(reservingInfo!["client"]);
+      client = reservingInfo!["client"];
+      userInfo = widget.database.getInfoByReference(client!);
       city = reservingInfo!["city"];
       from = reservingInfo!["from"];
       to = reservingInfo!["to"];
@@ -300,11 +303,18 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
                   width: double.infinity,
                   child: ElevatedButton(
                       onPressed: () {
+                        String? chatRoom = widget.chat.getChatRoomID(widget.auth.user!.uid, client!.id);
+                        Map<String, dynamic> chatData = <String, dynamic>{
+                          'users': [widget.auth.user!.uid, client!.id],
+                          'last message': null,
+                          'time': null,
+                        };
+                        chatRoom ??= widget.chat.addChatRoom(chatData);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) {
-                              return Chat();
+                              return Chat(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, chatRoomId: chatRoom!,);
                             },
                           ),
                         );
@@ -330,7 +340,10 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
                   child: ElevatedButton(
                       onPressed: () {
                         widget.database.updateDocumentData("Reservings", widget.reservingID, {"status": "Підтверджено"});
-                        Navigator.pop(context);
+                        const snackBar = SnackBar(
+                          content: Text('Резервування підтверджено'),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orangeAccent,

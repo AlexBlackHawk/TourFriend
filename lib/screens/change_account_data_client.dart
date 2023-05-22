@@ -4,6 +4,9 @@ import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
 
 enum Sex { male, female }
 
@@ -27,6 +30,8 @@ class _ChangeAccountDataClientState extends State<ChangeAccountDataClient> {
     Sex.female : "Жіноча"
   };
 
+  bool isAvatarChanged = false;
+
   final nameController = TextEditingController();
   final birthdayController = TextEditingController();
   final phoneController = TextEditingController();
@@ -41,12 +46,29 @@ class _ChangeAccountDataClientState extends State<ChangeAccountDataClient> {
   String? sex;
   String? photo;
 
+  File? imageFile;
+
+  String? imagePath;
+
   Sex getSexOption(String sex) {
     if (sex == "Чоловіча") {
       return Sex.male;
     }
     else {
       return Sex.female;
+    }
+  }
+
+  _getFromGallery() async {
+    final XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1800,
+      maxHeight: 1800,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        imageFile = File(pickedFile.path);
+      });
     }
   }
 
@@ -92,7 +114,10 @@ class _ChangeAccountDataClientState extends State<ChangeAccountDataClient> {
           child: Column(
             children: <Widget>[
               GestureDetector(
-                onTap: (){},
+                onTap: (){
+                  _getFromGallery();
+                  isAvatarChanged = true;
+                },
                 child: CircleAvatar(
                   backgroundImage: NetworkImage(photo!),
                   radius: 100,
@@ -420,7 +445,45 @@ class _ChangeAccountDataClientState extends State<ChangeAccountDataClient> {
                 width: double.infinity,
                 child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      if (passwordController.text != "" || confirmPasswordController.text != "") {
+                        if (passwordController.text == confirmPasswordController.text) {
+                          widget.auth.updateUserPassword(passwordController.text);
+                        }
+                        else {
+
+                        }
+                      }
+                      if (isAvatarChanged) {
+                        String fileName = "";
+                        String filePath = "";
+                        String fileExtension = p.extension(imageFile!.path);
+                        String id = widget.userID;
+                        fileName = "$id$fileExtension";
+                        filePath = "avatars/$id$fileExtension";
+                        widget.storage.uploadFile(filePath, imageFile!.path, fileName).then((value) {
+                          setState(() {
+                            imagePath = value;
+                          });
+                        });
+                      }
+                      else {
+                        imagePath = photo;
+                      }
+                      Map<String, dynamic> userData = <String, dynamic>{
+                        "avatar": imagePath,
+                        "birthday": birthdayController.text,
+                        "name": nameController.text,
+                        "sex": userSex,
+                        "email": emailController.text,
+                      };
+                      widget.auth.updateUserName(nameController.text);
+                      widget.auth.updatePhoto(imagePath!);
+                      widget.auth.updateUserEmail(emailController.text);
+                      widget.database.updateDocumentData("Users", widget.userID, userData);
+                      const snackBar = SnackBar(
+                        content: Text('Інформацію успішно відредаговано'),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orangeAccent,

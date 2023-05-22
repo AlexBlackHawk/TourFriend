@@ -31,7 +31,7 @@ class _TourAgentScreenState extends State<TourAgentScreen> {
   Widget build(BuildContext context) {
     List<Widget> _widgetOptions = <Widget>[
       TourAgentTours(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
-      ChatList(),
+      ChatList(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
       AccountInformationTourAgent(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, userID: widget.auth.user!.uid,),
     ];
     return Scaffold(

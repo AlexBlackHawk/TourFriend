@@ -4,6 +4,9 @@ import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
 
 enum HotelStar { one, two, three, four, five }
 enum HotelService { allInclude, breakfast, breakfastDinnerLunch, noFood, ultraAllInclude }
@@ -35,7 +38,11 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
   Map<String, String> servicesDescription = <String, String>{};
   Map<String, String> roomsDescription = <String, String>{};
 
+  List<File> photoFiles = <File>[];
+
   List<String> imgList = <String>[];
+
+  File? imageFile;
 
   HotelStar? _starsOption; // Write logic
   var starsString = {
@@ -133,6 +140,19 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
       element.dispose();
     }
     super.dispose();
+  }
+
+  _getFromGallery() async {
+    final XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1800,
+      maxHeight: 1800,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        imageFile = File(pickedFile.path);
+      });
+    }
   }
 
   Future<void> _roomNameInputDialog(BuildContext context) async {
@@ -272,7 +292,10 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                         child: const Icon(Icons.add),
                         onPressed: () {
                           setState(() {
-                            imgList.add("fhgbjnk");
+                            _getFromGallery();
+                            if (imageFile != null) {
+                              photoFiles.add(imageFile!);
+                            }
                           });
                         },
                       ),
@@ -786,6 +809,9 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                       onPressed: () {
                         String userID = widget.auth.user!.uid;
 
+                        servicesDescription = serviceDictionary();
+                        roomsDescription = roomDictionary();
+
                         Map<String, dynamic> tourInfo = <String, dynamic>{
                           "photos": imgList,
                           "name": nameController.text,
@@ -800,8 +826,13 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                           "stars": starsString[_starsOption],
                           "tour agent": widget.database.db.doc("Users/$userID"),
                         };
-                        widget.database.addNewDocument("Tours", tourInfo);
-                        Navigator.pop(context);
+                        String documentID = widget.database.addNewDocument("Tours", tourInfo);
+                        imgList = storeImages(documentID);
+                        widget.database.updateDocumentData("Tours", documentID, {"photos": imgList});
+                        const snackBar = SnackBar(
+                          content: Text('Новий тур успішно створено'),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
@@ -825,14 +856,45 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
     );
   }
 
+  List<String> storeImages(String tourID) {
+    List<String> result = <String>[];
+    for (var element in photoFiles) {
+      String fileName = p.basename(element.path);
+      String filePath = "Tours/$tourID/$fileName";
+      widget.storage.uploadFile(filePath, element.path, fileName).then((value) {
+        result.add(value);
+        // setState(() {
+        //   result.add(value);
+        // });
+      });
+    }
+    return result;
+  }
+
+  Map<String, String> serviceDictionary() {
+    Map<String, String> result = <String, String>{};
+    for (var i = 0; i < servicesTabsName.length;i++) {
+      result[servicesTabsName[i]] = servicesDescriptionControllers[i].text;
+    }
+    return result;
+  }
+
+  Map<String, String> roomDictionary() {
+    Map<String, String> result = <String, String>{};
+    for (var i = 0; i < roomsTabsName.length;i++) {
+      result[roomsTabsName[i]] = roomsDescriptionControllers[i].text;
+    }
+    return result;
+  }
+
   List<Widget> getBB() {
-    return imgList.map((item) => Container(
+    return photoFiles.map((item) => Container(
       margin: const EdgeInsets.all(5.0),
       child: ClipRRect(
           borderRadius: const BorderRadius.all(Radius.circular(5.0)),
           child: Stack(
             children: <Widget>[
-              Image.network(item, fit: BoxFit.cover, width: 1000.0),
+              Image.file(item, fit: BoxFit.cover, width: 1000.0),
               Positioned(
                 top: 0.0,
                 left: 0.0,
@@ -844,20 +906,24 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                       color: Colors.white,
                       onPressed: () {
                         setState(() {
-                          int itemIndex = imgList.indexOf(item);
-                          imgList[itemIndex] = "";
+                          _getFromGallery();
+                          if (imageFile != null) {
+                            int itemIndex = photoFiles.indexOf(item);
+                            photoFiles[itemIndex] = imageFile!;
+                          }
+                          // photos!.add(imageFile);
                         });
                       },
-                    ),
+                    ), //replace photo
                     IconButton(
                       icon: const Icon(Icons.clear),
                       color: Colors.white,
                       onPressed: () {
                         setState(() {
-                          imgList.remove(item);
+                          photoFiles.remove(item);
                         });
                       },
-                    ),
+                    ), //delete photo
                   ],
                 ),
               ),

@@ -41,6 +41,12 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
   Map<String, String>? roomsDescriptions;
   Map<String, dynamic>? tourAgentInfo;
 
+  List<Tab> roomsTabs = <Tab>[];
+  List<Widget> roomsTabsViews = <Widget>[];
+
+  List<Tab> servicesTabs = <Tab>[];
+  List<Widget> servicesTabsViews = <Widget>[];
+
   HotelStar? _starsOption; // Write logic
   var starsString = {
     HotelStar.one: "1",
@@ -152,7 +158,88 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
       _serviceOption = getServiceOption(serviceType!);
       _servicesTabController = TabController(vsync: this, length: servicesDescriptions!.length);
       _roomsTabController = TabController(vsync: this, length: roomsDescriptions!.length);
+      makeServiceTabs();
+      makeRoomTabs();
     });
+  }
+
+  void makeServiceTabs() {
+    servicesDescriptions!.forEach((key, value) {
+      addServiceTab(key);
+      addServiceTabBarView(value);
+    });
+  }
+
+  void makeRoomTabs() {
+    roomsDescriptions!.forEach((key, value) {
+      addRoomTab(key);
+      addRoomTabBarView(value);
+    });
+  }
+
+  void addRoomTab(String tabName) { // String roomName
+    // Tab roomTab = const Tab(text: 'Address');
+    // roomsTabsName.add(tabName);
+    roomsTabs.add(Tab(text: tabName));
+  }
+
+  void addRoomTabBarView(String tabContent) {
+    // TextEditingController newRoomController = TextEditingController();
+    // roomsDescriptionControllers.add(newRoomController);
+    roomsTabsViews.add(
+        TextFormField(
+          keyboardType: TextInputType.name,
+          initialValue: tabContent,
+          readOnly: true,
+          textAlign: TextAlign.start,
+          decoration: const InputDecoration(
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.white,
+              ),
+            ),
+            border: OutlineInputBorder(),
+          ),
+          cursorColor: Colors.black,
+          // controller: newRoomController,
+        )
+    );
+  }
+
+  void addServiceTab(String tabName) { // String roomName
+    // Tab roomTab = const Tab(text: 'Address');
+    // String serviceTabName = servicesNameController.text;
+    // servicesTabsName.add(tabName);
+    servicesTabs.add(Tab(text: tabName));
+  }
+
+  void addServiceTabBarView(String tabContent) {
+    // TextEditingController newServicesController = TextEditingController();
+    // servicesDescriptionControllers.add(newServicesController);
+    servicesTabsViews.add(
+        TextFormField(
+          keyboardType: TextInputType.name,
+          initialValue: tabContent,
+          textAlign: TextAlign.start,
+          readOnly: true,
+          decoration: const InputDecoration(
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.white,
+              ),
+            ),
+            border: OutlineInputBorder(),
+          ),
+          cursorColor: Colors.black,
+          // controller: newServicesController,
+        )
+    );
   }
 
   @override
@@ -416,7 +503,7 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
                         context,
                         MaterialPageRoute(
                           builder: (context) {
-                            return EditingTour(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tour: widget.tour,);
+                            return EditingTour(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tourID: widget.tour,);
                           },
                         ),
                       );

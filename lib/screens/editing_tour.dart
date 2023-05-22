@@ -5,6 +5,9 @@ import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
 
 enum HotelStar { one, two, three, four, five }
 enum HotelService { allInclude, breakfast, breakfastDinnerLunch, noFood, ultraAllInclude }
@@ -14,8 +17,8 @@ class EditingTour extends StatefulWidget {
   final ChatBackend chat;
   final StorageBackend storage;
   final DatabaseBackend database;
-  final String tour;
-  const EditingTour({super.key, required this.auth, required this.chat, required this.storage, required this.database, required this.tour});
+  final String tourID;
+  const EditingTour({super.key, required this.auth, required this.chat, required this.storage, required this.database, required this.tourID});
 
   @override
   State<EditingTour> createState() => _EditingTourState();
@@ -39,7 +42,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
 
   Map<String, dynamic>? tourInfo;
   List<Widget>? photosWidgets;
-  List<String>? photos;
+  List<dynamic>? photos;
   String? name;
   String? country;
   String? city;
@@ -54,6 +57,10 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   Map<String, String>? servicesDescriptions;
   Map<String, String>? roomsDescriptions;
   Map<String, dynamic>? tourAgentInfo;
+
+  List<String> deletedPhotos = <String>[];
+  Map<String, File> updatedPhotos = <String, File>{};
+  List<File> addedPhotos = <File>[];
 
   HotelStar? _starsOption; // Write logic
   var starsString = {
@@ -134,6 +141,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   final roomNameController = TextEditingController();
   late TabController _servicesTabController;
   late TabController _roomsTabController;
+  File? imageFile;
   // late String roomName;
   // late String valueText;
 
@@ -154,28 +162,39 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   }
 
   void makeServiceTabs() {
-
-  }
-
-  void makeServiceTabsContent() {
-
+    servicesDescriptions!.forEach((key, value) {
+      addServiceTab(key);
+      addServiceTabBarView(value);
+    });
   }
 
   void makeRoomTabs() {
-
+    roomsDescriptions!.forEach((key, value) {
+      addRoomTab(key);
+      addRoomTabBarView(value);
+    });
   }
 
-  void makeRoomTabsContent() {
-
+  _getFromGallery() async {
+    final XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1800,
+      maxHeight: 1800,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        imageFile = File(pickedFile.path);
+      });
+    }
   }
 
   @override
   void initState() {
     super.initState();
     setState(() {
-      tourInfo = widget.database.getTourInfo(widget.tour);
+      tourInfo = widget.database.getTourInfo(widget.tourID);
       photos = tourInfo!["photos"];
-      photosWidgets = imageSliders(photos!);
+      // photosWidgets = imageSliders(photos!);
       name = tourInfo!["name"];
       country = tourInfo!["country"];
       city = tourInfo!["city"];
@@ -193,6 +212,8 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
       _serviceOption = getServiceOption(serviceType!);
       _servicesTabController = TabController(vsync: this, length: servicesTabs.length);
       _roomsTabController = TabController(vsync: this, length: roomsTabs.length);
+      makeServiceTabs();
+      makeRoomTabs();
     });
   }
 
@@ -248,8 +269,8 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                 onPressed: () {
                   setState(() {
                     // roomName = valueText;
-                    addRoomTab(); // roomName
-                    addRoomTabBarView();
+                    addRoomTab(roomNameController.text); // roomName
+                    addRoomTabBarView("");
                     Navigator.pop(context);
                   });
                 },
@@ -289,8 +310,8 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                 onPressed: () {
                   setState(() {
                     // roomName = valueText;
-                    addServiceTab(); // roomName
-                    addServiceTabBarView();
+                    addServiceTab(servicesNameController.text); // roomName
+                    addServiceTabBarView("");
                     Navigator.pop(context);
                   });
                 },
@@ -342,7 +363,10 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                         child: const Icon(Icons.add),
                         onPressed: () {
                           setState(() {
-                            photos!.add("fhgbjnk");
+                            _getFromGallery();
+                            if (imageFile != null) {
+                              photos!.add(imageFile);
+                            }
                           });
                         },
                       ),
@@ -858,7 +882,34 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                   width: double.infinity,
                   child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        String userID = widget.auth.user!.uid;
+
+                        servicesDescription = serviceDictionary();
+                        roomsDescription = roomDictionary();
+
+                        deletePhotos();
+                        updatePhotos(widget.tourID);
+                        // addPhotos(widget.tourID);
+
+                        Map<String, dynamic> tourInfo = <String, dynamic>{
+                          "photos": photos,
+                          "name": nameController.text,
+                          "price UAH": priceUAHController.text,
+                          "price USD": priceUSDController.text,
+                          "price EUR": priceEURController.text,
+                          "tour information": descriptionController.text,
+                          "general information": generalInfoController.text,
+                          "services": servicesDescription,
+                          "rooms": roomsDescription,
+                          "food": serviceString[_serviceOption],
+                          "stars": starsString[_starsOption],
+                          "tour agent": widget.database.db.doc("Users/$userID"),
+                        };
+                        widget.database.updateDocumentData("Tours", widget.tourID, tourInfo);
+                        const snackBar = SnackBar(
+                          content: Text('Інформацію успішно відредаговано'),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
@@ -883,6 +934,22 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
     );
   }
 
+  Map<String, String> serviceDictionary() {
+    Map<String, String> result = <String, String>{};
+    for (var i = 0; i < servicesTabsName.length;i++) {
+      result[servicesTabsName[i]] = servicesDescriptionControllers[i].text;
+    }
+    return result;
+  }
+
+  Map<String, String> roomDictionary() {
+    Map<String, String> result = <String, String>{};
+    for (var i = 0; i < roomsTabsName.length;i++) {
+      result[roomsTabsName[i]] = roomsDescriptionControllers[i].text;
+    }
+    return result;
+  }
+
   List<Widget> getBB() {
     return photos!.map((item) => Container(
       margin: const EdgeInsets.all(5.0),
@@ -890,7 +957,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
           borderRadius: const BorderRadius.all(Radius.circular(5.0)),
           child: Stack(
             children: <Widget>[
-              Image.network(item, fit: BoxFit.cover, width: 1000.0),
+              item.runtimeType == File ? Image.file(item, fit: BoxFit.cover, width: 1000.0) : Image.network(item, fit: BoxFit.cover, width: 1000.0),
               Positioned(
                 top: 0.0,
                 left: 0.0,
@@ -902,20 +969,23 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                       color: Colors.white,
                       onPressed: () {
                         setState(() {
+                          _getFromGallery();
                           int itemIndex = photos!.indexOf(item);
-                          photos![itemIndex] = "";
+                          photos![itemIndex] = imageFile;
+                          // photos!.add(imageFile);
                         });
                       },
-                    ),
+                    ), //replace photo
                     IconButton(
                       icon: const Icon(Icons.clear),
                       color: Colors.white,
                       onPressed: () {
                         setState(() {
+                          deletedPhotos.add(item);
                           photos!.remove(item);
                         });
                       },
-                    ),
+                    ), //delete photo
                   ],
                 ),
               ),
@@ -925,18 +995,69 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
         .toList();
   }
 
-  void addRoomTab() { // String roomName
-    // Tab roomTab = const Tab(text: 'Address');
-    roomsTabs.add(Tab(text: roomNameController.text));
+  void deletePhotos() {
+    for (var element in deletedPhotos) {
+      widget.storage.deleteFile(element);
+    }
   }
 
-  void addRoomTabBarView() {
+  void updatePhotos(String tourID) {
+    for (var element in photos!) {
+      if (element.runtimeType == File) {
+        String fileName = p.basename(element.path);
+        String filePath = "Tours/$tourID/$fileName";
+        widget.storage.uploadFile(filePath, element.path, fileName).then((value) {
+          int itemIndex = photos!.indexOf(element);
+          photos![itemIndex] = value;
+          // photos!.add(value);
+          // setState(() {
+          //   result.add(value);
+          // });
+        });
+      }
+      else {
+        continue;
+      }
+    }
+    // updatedPhotos.forEach((key, value) {
+    //   String fileName = p.basename(value.path);
+    //   String filePath = "Tours/$tourID/$fileName";
+    //   int index = photos!.indexOf(key);
+    //   widget.storage.uploadFile(filePath, value.path, fileName).then((value) {
+    //     photos![index] = value;
+    //     // setState(() {
+    //     //   result.add(value);
+    //     // });
+    //   });
+    // });
+  }
+
+  // void addPhotos(String tourID) {
+  //   for (var element in addedPhotos) {
+  //     String fileName = p.basename(element.path);
+  //     String filePath = "Tours/$tourID/$fileName";
+  //     widget.storage.uploadFile(filePath, element.path, fileName).then((value) {
+  //       photos!.add(value);
+  //       // setState(() {
+  //       //   result.add(value);
+  //       // });
+  //     });
+  //   }
+  // }
+
+  void addRoomTab(String tabName) { // String roomName
+    // Tab roomTab = const Tab(text: 'Address');
+    roomsTabsName.add(tabName);
+    roomsTabs.add(Tab(text: tabName));
+  }
+
+  void addRoomTabBarView(String tabContent) {
     TextEditingController newRoomController = TextEditingController();
     roomsDescriptionControllers.add(newRoomController);
     roomsTabsViews.add(
         TextFormField(
           keyboardType: TextInputType.name,
-          initialValue: "gfhgjbkl",
+          initialValue: tabContent,
           textAlign: TextAlign.start,
           decoration: const InputDecoration(
             fillColor: Colors.white,
@@ -955,18 +1076,20 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
     );
   }
 
-  void addServiceTab() { // String roomName
+  void addServiceTab(String tabName) { // String roomName
     // Tab roomTab = const Tab(text: 'Address');
-    servicesTabs.add(Tab(text: servicesNameController.text));
+    // String serviceTabName = servicesNameController.text;
+    servicesTabsName.add(tabName);
+    servicesTabs.add(Tab(text: tabName));
   }
 
-  void addServiceTabBarView() {
+  void addServiceTabBarView(String tabContent) {
     TextEditingController newServicesController = TextEditingController();
     servicesDescriptionControllers.add(newServicesController);
     servicesTabsViews.add(
         TextFormField(
           keyboardType: TextInputType.name,
-          initialValue: "gfhgjbkl",
+          initialValue: tabContent,
           textAlign: TextAlign.start,
           decoration: const InputDecoration(
             fillColor: Colors.white,

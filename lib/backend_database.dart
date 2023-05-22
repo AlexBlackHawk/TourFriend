@@ -70,13 +70,42 @@ class DatabaseBackend extends ChangeNotifier{
     return tourData;
   }
 
-  void addNewDocument(String collectionName, Map<String, dynamic> documentData, [String? id]) {
+  Map<String, dynamic> getReservingInfo(String reservingID) {
+    late Map<String, dynamic> reservingData;
+    DocumentReference reservingDocument = db.collection("Reservings").doc(reservingID);
+    reservingDocument.get().then(
+          (DocumentSnapshot doc) {
+            reservingData = doc.data() as Map<String, dynamic>;
+      },
+      onError: (e) => print("Error getting document: $e"),
+    );
+    return reservingData;
+  }
+
+  Map<String, dynamic> getChatRoomInfo(String chatRoomID) {
+    late Map<String, dynamic> chatRoomData;
+    DocumentReference chatRoomDocument = db.collection("Reservings").doc(chatRoomID);
+    chatRoomDocument.get().then(
+          (DocumentSnapshot doc) {
+            chatRoomData = doc.data() as Map<String, dynamic>;
+      },
+      onError: (e) => print("Error getting document: $e"),
+    );
+    return chatRoomData;
+  }
+
+  String addNewDocument(String collectionName, Map<String, dynamic> documentData, [String? id]) {
+    late String newID;
     if (id != null) {
       db.collection(collectionName).doc(id).set(documentData);
+      newID = id;
     }
     else {
-      db.collection(collectionName).add(documentData);
+      db.collection(collectionName).add(documentData).then((DocumentReference doc) {
+        newID = doc.id;
+      });
     }
+    return newID;
   }
 
   void updateDocumentData(String collectionName, String documentID, Map<String, dynamic> updatedData) {
