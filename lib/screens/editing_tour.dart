@@ -5,7 +5,6 @@ import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
@@ -191,8 +190,8 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    setState(() {
-      tourInfo = widget.database.getTourInfo(widget.tourID);
+    setState(() async {
+      tourInfo = await widget.database.getTourInfo(widget.tourID);
       photos = tourInfo!["photos"];
       // photosWidgets = imageSliders(photos!);
       name = tourInfo!["name"];

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../backend_authentication.dart';
 import '../backend_database.dart';
@@ -29,8 +28,8 @@ class _ChatListItemState extends State<ChatListItem> {
     super.initState();
     for (var i = 0; i < widget.users.length; i++){
       if (widget.users[i] != widget.auth.user!.uid) {
-        setState(() {
-          userData = widget.database.getUserInfo(widget.users[i]);
+        setState(() async {
+          userData = await widget.database.getUserInfo(widget.users[i]);
         });
       }
     }

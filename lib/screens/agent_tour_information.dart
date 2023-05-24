@@ -137,8 +137,8 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
   @override
   void initState() {
     super.initState();
-    setState(() {
-      tourInfo = widget.database.getTourInfo(widget.tour);
+    setState(() async {
+      tourInfo = await widget.database.getTourInfo(widget.tour);
       photos = tourInfo!["photos"];
       photosWidgets = imageSliders(photos!);
       name = tourInfo!["name"];

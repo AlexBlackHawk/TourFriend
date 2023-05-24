@@ -140,8 +140,8 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
   @override
   void initState() {
     super.initState();
-    setState(() {
-      tourInfo = widget.database.getTourInfo(widget.tour);
+    setState(() async {
+      tourInfo = await widget.database.getTourInfo(widget.tour);
       photos = tourInfo!["photos"];
       photosWidgets = imageSliders(photos!);
       name = tourInfo!["name"];
@@ -160,7 +160,7 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
       roomsDescriptions = tourInfo!["rooms"];
       _starsOption = getStarOption(stars!);
       _serviceOption = getServiceOption(serviceType!);
-      tourAgentInfo = widget.database.getInfoByReference(tourAgent!);
+      tourAgentInfo = await widget.database.getInfoByReference(tourAgent!);
       _servicesTabController = TabController(vsync: this, length: servicesDescriptions!.length);
       _roomsTabController = TabController(vsync: this, length: roomsDescriptions!.length);
       makeServiceTabs();
@@ -543,13 +543,15 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
                           )
                       ),
                       onPressed: () {
-                        String? chatRoom = widget.chat.getChatRoomID(widget.auth.user!.uid, tourAgent!.id);
-                        Map<String, dynamic> chatData = <String, dynamic>{
-                          'users': [widget.auth.user!.uid, tourAgent!.id],
-                          'last message': null,
-                          'time': null,
-                        };
-                        chatRoom ??= widget.chat.addChatRoom(chatData);
+                        String? chatRoom = widget.chat.getChatRoomID(widget.auth.user!.uid, tourAgent!.id) as String?;
+                        if (chatRoom == null) {
+                          Map<String, dynamic> chatData = <String, dynamic>{
+                            'users': [widget.auth.user!.uid, tourAgent!.id],
+                            'last message': null,
+                            'time': null,
+                          };
+                          chatRoom ??= widget.chat.addChatRoom(chatData) as String?;
+                        }
                         Navigator.push(
                           context,
                           MaterialPageRoute(

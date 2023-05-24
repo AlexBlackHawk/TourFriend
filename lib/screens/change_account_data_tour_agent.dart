@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
@@ -40,16 +41,18 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
   final confirmPasswordController = TextEditingController();
   Map<String, dynamic>? userInfo;
   String? name;
-  String? birthday;
+  Timestamp? birthday;
   String? phone;
   String? email;
   String? sex;
   String? photo;
   String? tourCompany;
+  List<DropdownMenuItem<String>>? travelCompan;
 
   File? imageFile;
 
   String? imagePath;
+  DateTime? pickedDate;
 
   Sex getSexOption(String sex) {
     if (sex == "Чоловіча") {
@@ -76,8 +79,8 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
   @override
   void initState() {
     super.initState();
-    setState(() {
-      userInfo = widget.database.getUserInfo(widget.userID);
+    setState(() async {
+      userInfo = await widget.database.getUserInfo(widget.userID);
       photo = userInfo!["photo"];
       name = userInfo!["name"];
       birthday = userInfo!["birthday"];
@@ -86,6 +89,7 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
       sex = userInfo!["sex"];
       tourCompany = userInfo!["tour company"];
       _option = getSexOption(sex!);
+      travelCompan = await travelCompaniesDropdown();
     });
   }
 
@@ -181,7 +185,7 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                   ),
                   TextFormField(
                     textAlign: TextAlign.start,
-                    initialValue: birthday,
+                    initialValue: birthday != null ? intl.DateFormat('dd-MM-yyyy').format(birthday!.toDate()) : "",
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
                       filled: true,
@@ -197,15 +201,15 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                     controller: birthdayController,
                     readOnly: true,  //set it true, so that user will not able to edit text
                     onTap: () async {
-                      DateTime? pickedDate = await showDatePicker(
-                          context: context, initialDate: DateTime.now(),
+                      pickedDate = await showDatePicker(
+                          context: context, initialDate: birthday != null ? birthday!.toDate() : DateTime.now(),
                           firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
                           lastDate: DateTime(2101)
                       );
 
                       if(pickedDate != null ){
                         print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
-                        String formattedDate = intl.DateFormat('dd-MM-yyyy').format(pickedDate);
+                        String formattedDate = intl.DateFormat('dd-MM-yyyy').format(pickedDate!);
                         print(formattedDate); //formatted date output using intl package =>  2021-03-16
                         //you can implement different kind of Date Format here according to your requirement
 
@@ -476,7 +480,7 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                           tourCompany = newValue!;
                         });
                       },
-                      items: travelCompaniesDropdown()
+                      items: travelCompan
                   ),
                 ],
               ),
@@ -515,7 +519,7 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                         }
                         Map<String, dynamic> userData = <String, dynamic>{
                           "avatar": imagePath,
-                          "birthday": birthdayController.text,
+                          "birthday": pickedDate != null ? Timestamp.fromDate(pickedDate!) : null,
                           "name": nameController.text,
                           "sex": userSex,
                           "email": emailController.text,
@@ -553,12 +557,12 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
     );
   }
 
-  List<String> travelCompanies() {
-    return widget.database.getAllTourCompanies();
+  Future<List<String>> travelCompanies() async {
+    return await widget.database.getAllTourCompanies();
   }
 
-  List<DropdownMenuItem<String>> travelCompaniesDropdown() {
-    List<String> travComp = travelCompanies();
+  Future<List<DropdownMenuItem<String>>> travelCompaniesDropdown() async {
+    List<String> travComp = await travelCompanies();
     return travComp.map<DropdownMenuItem<String>>((String company) => DropdownMenuItem<String>(
       value: company,
       child: Text(

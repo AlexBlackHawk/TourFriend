@@ -141,9 +141,12 @@ class _UserSignInState extends State<UserSignIn> {
                 onPressed: () {
                   if (emailController.text != "" && passwordController.text != "") {
                     final res = widget.auth.emailPasswordSignIn(emailController.text, passwordController.text);
-                    res.then((value) {
+                    res.then((value) async {
+                      print(value);
+                      print(value != null);
                       if (value != null) {
-                        if (widget.database.getUserInfo(widget.auth.getUserID()!)["role"] == "Клієнт") {
+                        Map<String, dynamic> documentData = await widget.database.getUserInfo(value.uid);
+                        if (documentData["role"] == "Клієнт") {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -200,10 +203,12 @@ class _UserSignInState extends State<UserSignIn> {
                   onTap: () {
                     // authenticate.googleSignInUp();
                     final res = widget.auth.googleSignInUp();
-                    res.then((value) {
-                      if (value.credential != null) {
-                        if (widget.database.getAllUsersIDs().contains(widget.auth.getUserID()!)) {
-                          if (widget.database.getUserInfo(widget.auth.getUserID()!)["role"] == "Клієнт") {
+                    res.then((value) async {
+                      if (value != null) {
+                        List<String> usersIds = await widget.database.getAllUsersIDs();
+                        if (usersIds.contains(widget.auth.getUserID()!)) {
+                          Map<String, dynamic> documentData = await widget.database.getUserInfo(value.uid);
+                          if (documentData["role"] == "Клієнт") {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -251,10 +256,12 @@ class _UserSignInState extends State<UserSignIn> {
                   onTap: () {
                     // authenticate.facebookSignInUp();
                     final res = widget.auth.facebookSignInUp();
-                    res.then((value) {
-                      if (value.credential != null) {
-                        if (widget.database.getAllUsersIDs().contains(widget.auth.getUserID()!)) {
-                          if (widget.database.getUserInfo(widget.auth.getUserID()!)["role"] == "Клієнт") {
+                    res.then((value) async {
+                      if (value != null) {
+                        List<String> usersIds = await widget.database.getAllUsersIDs();
+                        if (usersIds.contains(widget.auth.getUserID()!)) {
+                          Map<String, dynamic> documentData = await widget.database.getUserInfo(value.uid);
+                          if (documentData["role"] == "Клієнт") {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -302,10 +309,12 @@ class _UserSignInState extends State<UserSignIn> {
                   onTap: () {
                     // authenticate.twitterSignInUp();
                     final res = widget.auth.twitterSignInUp();
-                    res.then((value) {
-                      if (value.credential != null) {
-                        if (widget.database.getAllUsersIDs().contains(widget.auth.getUserID()!)) {
-                          if (widget.database.getUserInfo(widget.auth.getUserID()!)["role"] == "Клієнт") {
+                    res.then((value) async {
+                      if (value != null) {
+                        List<String> usersIds = await widget.database.getAllUsersIDs();
+                        if (usersIds.contains(widget.auth.getUserID()!)) {
+                          Map<String, dynamic> documentData = await widget.database.getUserInfo(value.uid);
+                          if (documentData["role"] == "Клієнт") {
                             Navigator.push(
                               context,
                               MaterialPageRoute(

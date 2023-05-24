@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:intl/intl.dart' as intl;
@@ -24,9 +25,10 @@ class _ReservingTourState extends State<ReservingTour> {
   final dateToController = TextEditingController();
   Map<String, dynamic>? tourInfo;
   String? selectedCurrency;
-  double? nights;
+  int? nights;
   double? adults;
   double? children;
+  DocumentReference? tourAgent;
   Map<String, double>? prices;
   // = {
   //   "Гривні": 900,
@@ -54,11 +56,18 @@ class _ReservingTourState extends State<ReservingTour> {
     )).toList();
   }
 
+  int daysBetween(String fromDate, String toDate) {
+    DateTime from = DateTime.parse(fromDate);
+    DateTime to = DateTime.parse(toDate);
+    return (to.difference(from).inHours / 24).round();
+  }
+
   @override
   void initState() {
     super.initState();
-    setState(() {
-      tourInfo = widget.database.getTourInfo(widget.tourID);
+    setState(() async {
+      tourInfo = await widget.database.getTourInfo(widget.tourID);
+      tourAgent = tourInfo!["tour agent"];
       prices = {
         "Гривні": tourInfo!["price UAH"],
         "Долари": tourInfo!["price USD"],
@@ -141,6 +150,16 @@ class _ReservingTourState extends State<ReservingTour> {
                     height: 5,
                   ),
                   TextField(
+                    onSubmitted: (String val) {
+                      setState(() {
+                        if (dateToController.text.isNotEmpty) {
+                          nights = daysBetween(dateFromController.text, dateToController.text);
+                        }
+                        if (selectedCurrency != null) {
+                          cost = nights! * prices![selectedCurrency!]!;
+                        }
+                      });
+                    },
                     textAlign: TextAlign.start,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
@@ -198,6 +217,16 @@ class _ReservingTourState extends State<ReservingTour> {
                     height: 5,
                   ),
                   TextField(
+                    onSubmitted: (String val) {
+                      setState(() {
+                        if (dateFromController.text.isNotEmpty) {
+                          nights = daysBetween(dateFromController.text, dateToController.text);
+                        }
+                        if (selectedCurrency != null) {
+                          cost = nights! * prices![selectedCurrency!]!;
+                        }
+                      });
+                    },
                     textAlign: TextAlign.start,
                     decoration: const InputDecoration(
                       fillColor: Colors.white,
@@ -219,7 +248,7 @@ class _ReservingTourState extends State<ReservingTour> {
                           lastDate: DateTime(2101)
                       );
 
-                      if(pickedDate != null ){
+                      if(pickedDate != null){
                         print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
                         String formattedDate = intl.DateFormat('yyyy-MM-dd').format(pickedDate);
                         print(formattedDate); //formatted date output using intl package =>  2021-03-16
@@ -239,11 +268,11 @@ class _ReservingTourState extends State<ReservingTour> {
                 ],
               ),
 
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Ночей: 5",
-                  style: TextStyle(
+                  nights != null ? "Ночей: $nights" : "Ночей: ",
+                  style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
                       color:Colors.black
@@ -365,6 +394,9 @@ class _ReservingTourState extends State<ReservingTour> {
                       onChanged: (String? newValue) {
                         setState(() {
                           selectedCurrency = newValue!;
+                          if (nights != null) {
+                            cost = nights! * prices![selectedCurrency!]!;
+                          }
                         });
                       },
                       items: currenciesDropdown()
@@ -374,11 +406,11 @@ class _ReservingTourState extends State<ReservingTour> {
                   ),
                 ],
               ),
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Вартість: 25000",
-                  style: TextStyle(
+                  cost != null ? "Вартість: $cost" : "Вартість: ",
+                  style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
                       color:Colors.black
@@ -392,7 +424,7 @@ class _ReservingTourState extends State<ReservingTour> {
                 height: 45,
                 width: double.infinity,
                 child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
 
                       String userID = widget.auth.user!.uid;
                       String tourID = widget.tourID;
@@ -408,10 +440,14 @@ class _ReservingTourState extends State<ReservingTour> {
                         "children": children,
                         "currency": selectedCurrency,
                         "cost": cost,
-                        "tour": widget.database.db.doc("Users/$tourID"),
+                        "tour": widget.database.db.doc("Tours/$tourID"),
                         "status": "Не підтверджено",
                       };
-                      widget.database.addNewDocument("Reservations", reserveParameters);
+                      String newID = await widget.database.addNewDocument("Reservations", reserveParameters);
+                      DocumentReference docRef = widget.database.db.doc("Reservations/$newID");
+                      widget.database.updateDocumentData("Users", widget.auth.user!.uid, {"ordered tours": FieldValue.arrayUnion([docRef])});
+                      widget.database.updateDocumentData("Users", tourAgent!.id, {"ordered tours": FieldValue.arrayUnion([docRef])});
+
                       const snackBar = SnackBar(
                         content: Text('Заявку створено. Очікуйте підтвердження від туристичного агента'),
                       );

@@ -34,6 +34,7 @@ class _SignUpClientState extends State<SignUpClient> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  DateTime? pickedDate;
   String? userSex;
   Sex? _option; // Write logic
   var sexString = {
@@ -167,7 +168,7 @@ class _SignUpClientState extends State<SignUpClient> {
                     controller: birthdayController,
                     readOnly: true,  //set it true, so that user will not able to edit text
                     onTap: () async {
-                      DateTime? pickedDate = await showDatePicker(
+                      pickedDate = await showDatePicker(
                           context: context, initialDate: DateTime.now(),
                           firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
                           lastDate: DateTime(2101)
@@ -175,7 +176,7 @@ class _SignUpClientState extends State<SignUpClient> {
 
                       if(pickedDate != null ){
                         print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
-                        String formattedDate = intl.DateFormat('dd-MM-yyyy').format(pickedDate);
+                        String formattedDate = intl.DateFormat('dd-MM-yyyy').format(pickedDate!);
                         print(formattedDate); //formatted date output using intl package =>  2021-03-16
                         //you can implement different kind of Date Format here according to your requirement
 
@@ -185,6 +186,19 @@ class _SignUpClientState extends State<SignUpClient> {
                       }else{
                         print("Date is not selected");
                       }
+
+                      // if(pickedDate != null ){
+                      //   print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
+                      //   String formattedDate = intl.DateFormat('dd-MM-yyyy').format(pickedDate);
+                      //   print(formattedDate); //formatted date output using intl package =>  2021-03-16
+                      //   //you can implement different kind of Date Format here according to your requirement
+                      //
+                      //   setState(() {
+                      //     birthdayController.text = formattedDate; //set output date to TextField value.
+                      //   });
+                      // }else{
+                      //   print("Date is not selected");
+                      // }
                     },
                   ),
                   const SizedBox(
@@ -444,7 +458,7 @@ class _SignUpClientState extends State<SignUpClient> {
                           }
                           Map<String, dynamic> userData = <String, dynamic>{
                             "avatar": imagePath,
-                            "birthday": birthdayController.text,
+                            "birthday": pickedDate != null ? Timestamp.fromDate(pickedDate!) : null,
                             "favorite tours": FieldValue.arrayUnion([]),
                             "name": nameController.text,
                             "role": "Клієнт",
@@ -498,7 +512,7 @@ class _SignUpClientState extends State<SignUpClient> {
                     onTap: () {
                       final res = widget.auth.googleSignInUp();
                       res.then((value) {
-                        if (value.credential != null) {
+                        if (value != null) {
                           String? avatar = widget.auth.getUserPhotoLink();
                           Map<String, dynamic> userData = <String, dynamic>{
                             "avatar": avatar ?? "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f",
@@ -543,7 +557,7 @@ class _SignUpClientState extends State<SignUpClient> {
                     onTap: () {
                       final res = widget.auth.facebookSignInUp();
                       res.then((value) {
-                        if (value.credential != null) {
+                        if (value != null) {
                           String? avatar = widget.auth.getUserPhotoLink();
                           Map<String, dynamic> userData = <String, dynamic>{
                             "avatar": avatar ?? "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f",
@@ -588,7 +602,7 @@ class _SignUpClientState extends State<SignUpClient> {
                     onTap: () {
                       final res = widget.auth.facebookSignInUp();
                       res.then((value) {
-                        if (value.credential != null) {
+                        if (value != null) {
                           String? avatar = widget.auth.getUserPhotoLink();
                           Map<String, dynamic> userData = <String, dynamic>{
                             "avatar": avatar ?? "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f",

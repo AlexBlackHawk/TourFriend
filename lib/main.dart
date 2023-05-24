@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'screens/start_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:travel_agency_work_optimization/backend_authentication.dart';
-import 'package:travel_agency_work_optimization/backend_chat.dart';
-import 'package:travel_agency_work_optimization/backend_storage.dart';
-import 'package:travel_agency_work_optimization/backend_database.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

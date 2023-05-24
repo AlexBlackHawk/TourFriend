@@ -1,10 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../backend_authentication.dart';
 import '../backend_database.dart';
 import '../backend_storage.dart';
 import '../backend_chat.dart';
-import '/screens/chat.dart';
 
 class MessageItem extends StatefulWidget {
   final AuthenticationBackend auth;

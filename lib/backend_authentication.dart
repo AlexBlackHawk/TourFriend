@@ -1,13 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'dart:io';
-// import 'auth.dart';
-import 'firebase_options.dart';
-// import 'profile.dart';
 
 class ProgramUser {
   String name;
@@ -47,15 +42,15 @@ class AuthenticationBackend{
 
   }
 
-  Future<AuthCredential?> emailPasswordSignIn(String email, String password) async {
+  Future<User?> emailPasswordSignIn(String email, String password) async {
     UserCredential credential = await authInstance.signInWithEmailAndPassword(
         email: email,
         password: password
     );
-    return credential.credential;
+    return credential.user;
   }
 
-  Future<UserCredential> googleSignInUp() async {
+  Future<User?> googleSignInUp() async {
     if (Platform.isAndroid || Platform.isIOS) {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
@@ -69,7 +64,8 @@ class AuthenticationBackend{
       );
 
       // Once signed in, return the UserCredential
-      return await authInstance.signInWithCredential(credential);
+      UserCredential uc = await authInstance.signInWithCredential(credential);
+      return uc.user;
     }
     else {
       GoogleAuthProvider googleProvider = GoogleAuthProvider();
@@ -80,11 +76,12 @@ class AuthenticationBackend{
       });
 
       // Once signed in, return the UserCredential
-      return await authInstance.signInWithPopup(googleProvider);
+      UserCredential uc = await authInstance.signInWithPopup(googleProvider);
+      return uc.user;
     }
   }
 
-  Future<UserCredential> facebookSignInUp() async {
+  Future<User?> facebookSignInUp() async {
     if (Platform.isAndroid || Platform.isIOS) {
       final LoginResult loginResult = await FacebookAuth.instance.login();
 
@@ -94,7 +91,8 @@ class AuthenticationBackend{
       final OAuthCredential facebookAuthCredential = FacebookAuthProvider.credential(accessToken);
 
       // Once signed in, return the UserCredential
-      return authInstance.signInWithCredential(facebookAuthCredential);
+      UserCredential uc = await authInstance.signInWithCredential(facebookAuthCredential);
+      return uc.user;
     }
     else {
       FacebookAuthProvider facebookProvider = FacebookAuthProvider();
@@ -105,17 +103,20 @@ class AuthenticationBackend{
       });
 
       // Once signed in, return the UserCredential
-      return await authInstance.signInWithPopup(facebookProvider);
+      UserCredential uc = await authInstance.signInWithPopup(facebookProvider);
+      return uc.user;
     }
   }
 
-  Future<UserCredential> twitterSignInUp() async {
+  Future<User?> twitterSignInUp() async {
     TwitterAuthProvider twitterProvider = TwitterAuthProvider();
 
     if (kIsWeb) {
-      return await authInstance.signInWithPopup(twitterProvider);
+      UserCredential uc = await authInstance.signInWithPopup(twitterProvider);
+      return uc.user;
     } else {
-      return await authInstance.signInWithProvider(twitterProvider);
+      UserCredential uc = await authInstance.signInWithProvider(twitterProvider);
+      return uc.user;
     }
   }
 

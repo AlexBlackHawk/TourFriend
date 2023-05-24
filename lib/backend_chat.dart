@@ -1,10 +1,6 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-
-import 'firebase_options.dart';
 
 // class Utils {
 //   static StreamTransformer transformer<T>(
@@ -165,11 +161,10 @@ import 'firebase_options.dart';
 class ChatBackend extends ChangeNotifier {
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
-  String addChatRoom(chatRoom) {
+  Future<String> addChatRoom(chatRoom) async {
     late String id;
-    db.collection("Chat rooms").add(chatRoom).then((DocumentReference doc) {
-      id = doc.id;
-    });
+    DocumentReference snapshot = await db.collection("Chat rooms").add(chatRoom);
+    id = snapshot.id;
     return id;
   }
 
@@ -179,7 +174,7 @@ class ChatBackend extends ChangeNotifier {
 
 
   Future<void> addMessage(String chatRoomId, chatMessageData) async {
-    db.collection("Chat rooms").doc(chatRoomId).collection("Chats").add(chatMessageData).catchError((e){
+    db.collection("Chat rooms").doc(chatRoomId).collection("Chats").add(chatMessageData).catchError((e) {
       print(e.toString());
     });
   }
@@ -188,13 +183,17 @@ class ChatBackend extends ChangeNotifier {
     return db.collection("Chat rooms").where('users', arrayContains: itIsMyName).snapshots();
   }
 
-  String? getChatRoomID(String firstUser, String secondUser) {
+  Future<String?> getChatRoomID(String firstUser, String secondUser) async {
     String? id;
-    db.collection("Chat rooms").where("users", arrayContains: firstUser).where("users", arrayContains: secondUser).get().then((value) {
-      if(value.docs.isNotEmpty) {
-        id = value.docs[0].id;
+    QuerySnapshot chatDocument = await db.collection("Chat rooms").where("users", arrayContains: firstUser).where("users", arrayContains: secondUser).get();
+      if(chatDocument.docs.isNotEmpty) {
+        id = chatDocument.docs[0].id;
       }
-    });
+    // .then((value) {
+    //   if(value.docs.isNotEmpty) {
+    //     id = value.docs[0].id;
+    //   }
+    // });
     return id;
   }
 }

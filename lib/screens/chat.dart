@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:provider/provider.dart';
 import 'package:travel_agency_work_optimization/widgets/message_item.dart';
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
@@ -29,12 +27,12 @@ class _ChatState extends State<Chat> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      chatRoom = widget.database.getChatRoomInfo(widget.chatRoomId);
+    setState(() async {
+      chatRoom = await widget.database.getChatRoomInfo(widget.chatRoomId);
       chats = widget.chat.getChats(widget.chatRoomId);
       for (var i = 0; i < chatRoom!["users"].length; i++){
         if (chatRoom!["users"][i] != widget.auth.user!.uid) {
-          userData = widget.database.getUserInfo(chatRoom!["users"][i]);
+          userData = await widget.database.getUserInfo(chatRoom!["users"][i]);
         }
       }
     });
@@ -47,7 +45,7 @@ class _ChatState extends State<Chat> {
   }
 
   // handle send message
-  void handleSend_message() {
+  void handleSendMessage() {
     if (chatInputController.text.isNotEmpty) {
       String id = widget.auth.user!.uid;
       Map<String, dynamic> chatMessageMap = {
@@ -183,7 +181,7 @@ class _ChatState extends State<Chat> {
             const SizedBox(width: 15,),
             FloatingActionButton(
               onPressed: () {
-                handleSend_message();
+                handleSendMessage();
               },
               backgroundColor: Colors.blue,
               elevation: 0,

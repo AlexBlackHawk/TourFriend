@@ -1,109 +1,108 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-import 'firebase_options.dart';
-//agent_tour_information,
 class DatabaseBackend extends ChangeNotifier{
   final FirebaseFirestore db = FirebaseFirestore.instance;
   DatabaseBackend();
-// Future<QuerySnapshot<Map<String, dynamic>>>
+
   Stream<QuerySnapshot> getAllTours() {
     return db.collection('Tours').snapshots();
   }
 
-  List<String> getAllTourCompanies() {
-    List<String> tourCompanies = <String>[];
-    CollectionReference tourCompaniesDocuments = db.collection("Tour companies");
-    tourCompaniesDocuments.get().then((value) {
-      for (int i = 0; i < value.size; i++) {
-        tourCompanies.add(value.docs[i].get("name"));
-      }
-    });
-    return tourCompanies;
+  Future<List<String>> getAllTourCompanies() async {
+    QuerySnapshot tourCompaniesDocuments = await db.collection("Tour companies").get();
+    List<String> documentIds = tourCompaniesDocuments.docs.map((doc) => doc["name"].toString()).toList();
+    return documentIds;
   }
 
-  List<String> getAllUsersIDs() {
-    List<String> res = <String>[];
-    CollectionReference tourCompaniesDocuments = db.collection("Users");
-    tourCompaniesDocuments.get().then((value) {
-      for (int i = 0; i < value.size; i++) {
-        res.add(value.docs[i].id);
-      }
-    });
-    return res;
+  Future<List<String>> getAllUsersIDs() async {
+    QuerySnapshot usersDocuments = await db.collection("Users").get();
+    List<String> documentIds = usersDocuments.docs.map((doc) => doc.id).toList();
+    return documentIds;
   }
 
-  Map<String, dynamic> getUserInfo(String userID) {
-    late Map<String, dynamic> userData;
+  Future<Map<String, dynamic>> getUserInfo(String userID) async {
     DocumentReference tourDocument = db.collection("Users").doc(userID);
-    tourDocument.get().then(
-          (DocumentSnapshot doc) {
-        userData = doc.data() as Map<String, dynamic>;
-      },
-      onError: (e) => print("Error getting document: $e"),
-    );
-    return userData;
+    DocumentSnapshot snapshot = await tourDocument.get();
+
+    // Check if the document exists
+    if (snapshot.exists) {
+      // Return the data as a Map<String, dynamic>
+      return snapshot.data() as Map<String, dynamic>;
+    } else {
+      // Document does not exist
+      throw Exception('Document does not exist');
+    }
   }
 
   void getUserSpecificInfo(String userID) {
 
   }
 
-  Map<String, dynamic> getInfoByReference(DocumentReference docRef) {
-    late Map<String, dynamic> info;
-    docRef.get().then((DocumentSnapshot dataValue) {
-      info = dataValue.data() as Map<String, dynamic>;
-    });
-    return info;
+  Future<Map<String, dynamic>> getInfoByReference(DocumentReference docRef) async {
+    DocumentSnapshot snapshot = await docRef.get();
+
+    // Check if the document exists
+    if (snapshot.exists) {
+      // Return the data as a Map<String, dynamic>
+      return snapshot.data() as Map<String, dynamic>;
+    } else {
+      // Document does not exist
+      throw Exception('Document does not exist');
+    }
   }
 
-  Map<String, dynamic> getTourInfo(String tourID) {
-    late Map<String, dynamic> tourData;
+  Future<Map<String, dynamic>> getTourInfo(String tourID) async {
     DocumentReference tourDocument = db.collection("Tours").doc(tourID);
-    tourDocument.get().then(
-          (DocumentSnapshot doc) {
-        tourData = doc.data() as Map<String, dynamic>;
-      },
-      onError: (e) => print("Error getting document: $e"),
-    );
-    return tourData;
+    DocumentSnapshot snapshot = await tourDocument.get();
+
+    // Check if the document exists
+    if (snapshot.exists) {
+      // Return the data as a Map<String, dynamic>
+      return snapshot.data() as Map<String, dynamic>;
+    } else {
+      // Document does not exist
+      throw Exception('Document does not exist');
+    }
   }
 
-  Map<String, dynamic> getReservingInfo(String reservingID) {
-    late Map<String, dynamic> reservingData;
+  Future<Map<String, dynamic>> getReservingInfo(String reservingID) async {
     DocumentReference reservingDocument = db.collection("Reservings").doc(reservingID);
-    reservingDocument.get().then(
-          (DocumentSnapshot doc) {
-            reservingData = doc.data() as Map<String, dynamic>;
-      },
-      onError: (e) => print("Error getting document: $e"),
-    );
-    return reservingData;
+    DocumentSnapshot snapshot = await reservingDocument.get();
+
+    // Check if the document exists
+    if (snapshot.exists) {
+      // Return the data as a Map<String, dynamic>
+      return snapshot.data() as Map<String, dynamic>;
+    } else {
+      // Document does not exist
+      throw Exception('Document does not exist');
+    }
   }
 
-  Map<String, dynamic> getChatRoomInfo(String chatRoomID) {
-    late Map<String, dynamic> chatRoomData;
-    DocumentReference chatRoomDocument = db.collection("Reservings").doc(chatRoomID);
-    chatRoomDocument.get().then(
-          (DocumentSnapshot doc) {
-            chatRoomData = doc.data() as Map<String, dynamic>;
-      },
-      onError: (e) => print("Error getting document: $e"),
-    );
-    return chatRoomData;
+  Future<Map<String, dynamic>> getChatRoomInfo(String chatRoomID) async {
+    DocumentReference chatRoomDocument = db.collection("Chats").doc(chatRoomID);
+    DocumentSnapshot snapshot = await chatRoomDocument.get();
+
+    // Check if the document exists
+    if (snapshot.exists) {
+      // Return the data as a Map<String, dynamic>
+      return snapshot.data() as Map<String, dynamic>;
+    } else {
+      // Document does not exist
+      throw Exception('Document does not exist');
+    }
   }
 
-  String addNewDocument(String collectionName, Map<String, dynamic> documentData, [String? id]) {
+  Future<String> addNewDocument(String collectionName, Map<String, dynamic> documentData, [String? id]) async {
     late String newID;
     if (id != null) {
       db.collection(collectionName).doc(id).set(documentData);
       newID = id;
     }
     else {
-      db.collection(collectionName).add(documentData).then((DocumentReference doc) {
-        newID = doc.id;
-      });
+      DocumentReference snapshot = await db.collection(collectionName).add(documentData);
+      newID = snapshot.id;
     }
     return newID;
   }
@@ -115,18 +114,5 @@ class DatabaseBackend extends ChangeNotifier{
 
   void deleteDocument(String collectionName, String documentID) {
     db.collection(collectionName).doc(documentID).delete();
-  }
-
-  Future<void> createChatRoom(String chatRoomID, chatRoomMap) async {
-    await db
-        .collection("Chat rooms")
-        .add(chatRoomMap);
-  }
-
-  Future<QuerySnapshot> getChatRoom(String chatRoomID) async {
-    return await db
-        .collection("Chat rooms")
-        .where("room_ID", isEqualTo: chatRoomID)
-        .get();
   }
 }

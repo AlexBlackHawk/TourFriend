@@ -6,6 +6,7 @@ import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
+
 enum Sex { male, female }
 
 class AccountInformationClient extends StatefulWidget {
@@ -52,8 +53,8 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      userInfo = widget.database.getUserInfo(widget.userID);
+    setState(() async {
+      userInfo = await widget.database.getUserInfo(widget.userID);
       photo = userInfo!["photo"];
       name = userInfo!["name"];
       birthday = userInfo!["birthday"];

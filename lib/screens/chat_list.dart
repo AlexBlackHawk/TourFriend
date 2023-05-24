@@ -5,6 +5,7 @@ import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
+import 'package:intl/intl.dart' as intl;
 
 class ChatList extends StatefulWidget {
   final AuthenticationBackend auth;
@@ -28,11 +29,15 @@ class _ChatListState extends State<ChatList> {
     });
   }
 
+  String getTime (DateTime dateTime) {
+    return intl.DateFormat.Hm().format(dateTime);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("ghbjlmk"),
+          title: const Text("Чати"),
           automaticallyImplyLeading: false,
         ),
         //backgroundColor: Colors[],
@@ -54,7 +59,7 @@ class _ChatListState extends State<ChatList> {
                             database: widget.database,
                             users: snapshot.data!.docs[index]["users"],
                             lastMessage: snapshot.data!.docs[index]["last message"],
-                            time: snapshot.data!.docs[index]["time"],
+                            time: getTime(snapshot.data!.docs[index]["time"]),
                             chatRoomID: snapshot.data!.docs[index].id,
                           );
                   },

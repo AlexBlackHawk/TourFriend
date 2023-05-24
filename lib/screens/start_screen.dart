@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '/widgets/start_screen_btn_set.dart';
 import 'package:travel_agency_work_optimization/backend_authentication.dart';

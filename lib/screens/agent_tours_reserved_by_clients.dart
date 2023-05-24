@@ -18,25 +18,88 @@ class AgentToursReservedClients extends StatefulWidget {
 }
 
 class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
-  List<DocumentReference>? dataDR;
+  List<GestureDetector> dataDR = <GestureDetector>[];
   //= List.from(widget.database.db.collection("Users").doc(widget.auth.user!.uid));
 
   @override
   void initState() {
     super.initState();
-    getdata();
+    setState(() {
+      getData();
+    });
   }
 
-  getdata() async{
-    dataDR = <DocumentReference>[];
-    await widget.database.db.collection("Users").doc(widget.auth.user!.uid).get().then((value){
-      setState(() {
-        // first add the data to the Offset object
-        for (var element in List.from(value.data()!['ordered tours'])) {
-          dataDR?.add(element);
-        }
-      });
-    });
+  getData() async{
+    DocumentSnapshot docs = await widget.database.db.collection("Users").doc(widget.auth.user!.uid).get();
+    for (var element in docs['ordered tours']) {
+      Map<String, dynamic> reservingData = await widget.database.getInfoByReference(element);
+      Map<String, dynamic> userData = await widget.database.getInfoByReference(reservingData["client"]);
+      Map<String, dynamic> tourData = await widget.database.getInfoByReference(reservingData["tour"]);
+      String city = tourData['city'];
+      String country = tourData['country'];
+      String name = tourData['name'];
+      String photo = tourData['photo'][0];
+      String id = element.id;
+
+      GestureDetector gd = GestureDetector(
+        onTap: (){
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return TourAgentReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: id,);
+              },
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.only(left: 16,right: 16,top: 10,bottom: 10),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    Image(image: NetworkImage(photo),),
+                    const SizedBox(width: 16,),
+                    Expanded(
+                      child: Container(
+                        color: Colors.transparent,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(name, style: const TextStyle(fontSize: 16),),
+                            const SizedBox(height: 6,),
+                            Text("$city, $country ",style: TextStyle(fontSize: 13,color: Colors.grey.shade600, fontWeight: FontWeight.normal),),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                color: Colors.white,
+                child: Column(
+                    children: <Widget> [
+                      Expanded(
+                        child: CircleAvatar(
+                          backgroundImage: NetworkImage(userData["avatar"]),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          userData["name"],
+                        ),
+                      ),
+                    ]
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+      dataDR.add(gd);
+    }
   }
 
   @override
@@ -44,68 +107,68 @@ class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
     return Scaffold(
       // appBar: getAppBar(context),
       backgroundColor: Colors.white,
-      body: dataDR != null ? ListView.builder(
-        itemCount: dataDR!.length,
-        itemBuilder: (context, index) {
-          Map<String, dynamic> data = widget.database.getInfoByReference(dataDR![index]);
-          String city = data['city'];
-          String country = data['country'];
-          String name = data['name'];
-          String photo = data['photo'][0];
-          String id = dataDR![index].id;
-          var lst = widget.database.getUserInfo(widget.auth.user!.uid)["ordered tours"];
-          bool isSaved = lst.contain(id);
-
-          return ListTile(
-            leading: Image(image: NetworkImage(photo),),
-            title: Text(name),
-            subtitle: Row(
-              children: <Widget>[
-                const Icon(
-                  Icons.place,
-                  color: Colors.black,
-                ),
-                Text(
-                  " $city, $country ",
-                  style: const TextStyle(
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-            trailing: IconButton(
-                onPressed: () {
-                  isSaved = isSaved ? false : true;
-                  DocumentReference ref = widget.database.db.doc("Tours/$id");
-                  setState(() {
-                    if (isSaved) {
-                      widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
-                        "ordered tours": FieldValue.arrayUnion([ref])
-                      });
-                    }
-                    else {
-                      widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
-                        "ordered tours": FieldValue.arrayRemove([ref])
-                      });
-                    }
-                  });
-                },
-                icon: Icon(isSaved ? Icons.favorite : Icons.favorite_border,
-                    color: isSaved ? Colors.red : null)),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return TourAgentReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: id,);
-                  },
-                ),
-              );
-            },
-          );
-        },
+      body: dataDR.isNotEmpty ? ListView(
+        children: dataDR,
       )
           : Container(),
     );
   }
 }
+
+
+
+// return ListTile(
+//   leading: Image(image: NetworkImage(photo),),
+//   title: Text(name),
+//   subtitle: Row(
+//     children: <Widget>[
+//       const Icon(
+//         Icons.place,
+//         color: Colors.black,
+//       ),
+//       Text(
+//         " $city, $country ",
+//         style: const TextStyle(
+//           color: Colors.black,
+//         ),
+//       ),
+//     ],
+//   ),
+//   trailing: IconButton(
+//       onPressed: () {
+//         isSaved = isSaved ? false : true;
+//         DocumentReference ref = widget.database.db.doc("Tours/$id");
+//         setState(() {
+//           if (isSaved) {
+//             widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
+//               "ordered tours": FieldValue.arrayUnion([ref])
+//             });
+//           }
+//           else {
+//             widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
+//               "ordered tours": FieldValue.arrayRemove([ref])
+//             });
+//           }
+//         });
+//       },
+//       icon: Icon(isSaved ? Icons.favorite : Icons.favorite_border,
+//           color: isSaved ? Colors.red : null)),
+//   onTap: () {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (context) {
+//           return TourAgentReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: id,);
+//         },
+//       ),
+//     );
+//   },
+// );
+
+
+
+
+
+
+
+

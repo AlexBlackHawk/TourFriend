@@ -19,6 +19,9 @@ class TourList extends StatefulWidget {
 
 class _TourListState extends State<TourList> {
   Stream<QuerySnapshot>? allTours;
+  Map<String, dynamic>? myInfo;
+  List<ListTile> tiles = <ListTile>[];
+  bool? isSaved;
   @override
   void initState () {
     super.initState();
@@ -31,7 +34,7 @@ class _TourListState extends State<TourList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("ghbjlmk"),
+        title: const Text("Всі тури"),
         automaticallyImplyLeading: false,
       ),
       backgroundColor: Colors.white,
@@ -45,69 +48,68 @@ class _TourListState extends State<TourList> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Text("Loading");
           }
-          return ListView(
-            children: snapshot.data!.docs
-                .map((DocumentSnapshot document) {
-              Map<String, dynamic> data =
-              document.data()! as Map<String, dynamic>;
-              String city = data['city'];
-              String country = data['country'];
-              String name = data['name'];
-              String photo = data['photo'][0];
-              String id = document.id;
-              var lst = widget.database.getUserInfo(widget.auth.user!.uid)["favorite tours"];
-              bool isSaved = lst.contain(id);
 
-              return ListTile(
-                leading: Image(image: NetworkImage(photo),),
-                title: Text(name),
-                subtitle: Row(
-                  children: <Widget>[
-                    const Icon(
-                      Icons.place,
+          snapshot.data!.docs.forEach((DocumentSnapshot document) async {
+            Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
+            String city = data['city'];
+            String country = data['country'];
+            String name = data['name'];
+            String photo = data['photos'][0];
+            String id = document.id;
+            myInfo = await widget.database.getUserInfo(widget.auth.user!.uid);
+            isSaved = myInfo!["favorite tours"].contains(id);
+
+            ListTile tile = ListTile(
+              leading: Image(image: NetworkImage(photo),),
+              title: Text(name),
+              subtitle: Row(
+                children: <Widget>[
+                  const Icon(
+                    Icons.place,
+                    color: Colors.black,
+                  ),
+                  Text(
+                    "$city, $country",
+                    style: const TextStyle(
                       color: Colors.black,
                     ),
-                    Text(
-                      " $city, $country ",
-                      style: const TextStyle(
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-                trailing: IconButton(
-                    onPressed: () {
-                      isSaved = isSaved ? false : true;
-                      DocumentReference ref = widget.database.db.doc("Tours/$id");
-                      setState(() {
-                        if (isSaved) {
-                          widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
-                            "favorite tours": FieldValue.arrayUnion([ref])
-                          });
-                        }
-                        else {
-                          widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
-                            "favorite tours": FieldValue.arrayRemove([ref])
-                          });
-                        }
-                      });
+                  ),
+                ],
+              ),
+              trailing: IconButton(
+                  onPressed: () {
+                    isSaved = isSaved! ? false : true;
+                    setState(() {
+                      if (isSaved!) {
+                        widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
+                          "favorite tours": FieldValue.arrayUnion([id])
+                        });
+                      }
+                      else {
+                        widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
+                          "favorite tours": FieldValue.arrayRemove([id])
+                        });
+                      }
+                    });
+                  },
+                  icon: Icon(isSaved! ? Icons.favorite : Icons.favorite_border,
+                      color: isSaved! ? Colors.red : null)),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return ClientTourInformation(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tour: id);
                     },
-                    icon: Icon(isSaved ? Icons.favorite : Icons.favorite_border,
-                    color: isSaved ? Colors.red : null)),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return ClientTourInformation(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tour: id);
-                      },
-                    ),
-                  );
-                },
-              );
-            })
-                .toList()
-                .cast(),
+                  ),
+                );
+              },
+            );
+            tiles.add(tile);
+          });
+
+          return ListView(
+            children: tiles,
           );
         },
       )

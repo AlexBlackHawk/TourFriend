@@ -34,10 +34,10 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      reservingInfo = widget.database.getUserInfo(widget.reservingID);
-      tourInfo = widget.database.getInfoByReference(reservingInfo!["tour"]);
-      userInfo = widget.database.getInfoByReference(reservingInfo!["tour agent"]);
+    setState(() async {
+      reservingInfo = await widget.database.getUserInfo(widget.reservingID);
+      tourInfo = await widget.database.getInfoByReference(reservingInfo!["tour"]);
+      userInfo = await widget.database.getInfoByReference(reservingInfo!["tour agent"]);
       city = reservingInfo!["city"];
       from = reservingInfo!["from"];
       to = reservingInfo!["to"];
@@ -54,7 +54,7 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("fhgjkl"),
+        title: const Text("Інформація про бронювання"),
         backgroundColor: Colors.blue,
       ),
       backgroundColor: Colors.white,

@@ -806,7 +806,7 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                   height: 45,
                   width: double.infinity,
                   child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         String userID = widget.auth.user!.uid;
 
                         servicesDescription = serviceDictionary();
@@ -826,7 +826,7 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                           "stars": starsString[_starsOption],
                           "tour agent": widget.database.db.doc("Users/$userID"),
                         };
-                        String documentID = widget.database.addNewDocument("Tours", tourInfo);
+                        String documentID = await widget.database.addNewDocument("Tours", tourInfo);
                         imgList = storeImages(documentID);
                         widget.database.updateDocumentData("Tours", documentID, {"photos": imgList});
                         const snackBar = SnackBar(
@@ -945,14 +945,23 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
     roomsDescriptionControllers.add(newRoomController);
     roomsTabsViews.add(
         TextField(
-          keyboardType: TextInputType.name,
+          keyboardType: TextInputType.text,
           textAlign: TextAlign.center,
           expands: true,
           minLines: null,
           maxLines: null,
           decoration: const InputDecoration(
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.white,
+              ),
+            ),
             border: OutlineInputBorder(),
           ),
+          cursorColor: Colors.black,
           controller: newRoomController,
         )
     );
@@ -969,10 +978,12 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
     TextEditingController newServicesController = TextEditingController();
     servicesDescriptionControllers.add(newServicesController);
     servicesTabsViews.add(
-        TextFormField(
-          keyboardType: TextInputType.name,
-          initialValue: "gfhgjbkl",
-          textAlign: TextAlign.start,
+        TextField(
+          keyboardType: TextInputType.text,
+          textAlign: TextAlign.center,
+          expands: true,
+          minLines: null,
+          maxLines: null,
           decoration: const InputDecoration(
             fillColor: Colors.white,
             filled: true,

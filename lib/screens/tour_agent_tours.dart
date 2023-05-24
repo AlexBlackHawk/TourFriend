@@ -32,7 +32,7 @@ class _TourAgentToursState extends State<TourAgentTours> {
                 Tab(text: "Заброньовані клієнтами тури")
               ],
             ),
-            title: const Text("fghbjkml;"),
+            title: const Text("Тури"),
             automaticallyImplyLeading: false,
           ),
           body: TabBarView(

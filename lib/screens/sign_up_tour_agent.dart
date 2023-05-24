@@ -36,12 +36,14 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
   final confirmPasswordController = TextEditingController();
   String? selectedTourCompany;
   String? userSex;
+  DateTime? pickedDate;
   Sex? _option; // Write logic
   var sexString = {
     Sex.male : "Чоловіча",
     Sex.female : "Жіноча"
   };
   bool alreadyProvided = true;
+  List<DropdownMenuItem<String>>? travelCompan;
 
   File? imageFile;
   String imagePath = "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f";
@@ -57,6 +59,14 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
         imageFile = File(pickedFile.path);
       });
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() async {
+      travelCompan = await travelCompaniesDropdown();
+    });
   }
 
   @override
@@ -79,7 +89,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
         appBarText: "Зареєструватися",
       ),
       backgroundColor: Colors.lightBlue,
-      body: SingleChildScrollView(
+      body: travelCompan != null ? SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Container(
           alignment: Alignment.center,
@@ -170,7 +180,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
                     controller: birthdayController,
                     readOnly: true,  //set it true, so that user will not able to edit text
                     onTap: () async {
-                      DateTime? pickedDate = await showDatePicker(
+                      pickedDate = await showDatePicker(
                           context: context, initialDate: DateTime.now(),
                           firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
                           lastDate: DateTime(2101)
@@ -178,7 +188,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
 
                       if(pickedDate != null ){
                         print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
-                        String formattedDate = intl.DateFormat('dd-MM-yyyy').format(pickedDate);
+                        String formattedDate = intl.DateFormat('dd-MM-yyyy').format(pickedDate!);
                         print(formattedDate); //formatted date output using intl package =>  2021-03-16
                         //you can implement different kind of Date Format here according to your requirement
 
@@ -447,7 +457,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
                           selectedTourCompany = newValue!;
                         });
                       },
-                      items: travelCompaniesDropdown()
+                      items: travelCompan
                   ),
                 ],
               ),
@@ -488,7 +498,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
                           }
                           Map<String, dynamic> userData = <String, dynamic>{
                             "avatar": imagePath,
-                            "birthday": birthdayController.text,
+                            "birthday": pickedDate != null ? Timestamp.fromDate(pickedDate!) : null,
                             "added tours": FieldValue.arrayUnion([]),
                             "name": nameController.text,
                             "role": "Туристичний агент",
@@ -542,7 +552,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
                     onTap: () {
                       final res = widget.auth.googleSignInUp();
                       res.then((value) {
-                        if (value.credential != null) {
+                        if (value != null) {
                           String? avatar = widget.auth.getUserPhotoLink();
                           Map<String, dynamic> userData = <String, dynamic>{
                             "avatar": avatar ?? "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f",
@@ -587,7 +597,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
                     onTap: () {
                       final res = widget.auth.facebookSignInUp();
                       res.then((value) {
-                        if (value.credential != null) {
+                        if (value != null) {
                           String? avatar = widget.auth.getUserPhotoLink();
                           Map<String, dynamic> userData = <String, dynamic>{
                             "avatar": avatar ?? "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f",
@@ -632,7 +642,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
                     onTap: () {
                       final res = widget.auth.facebookSignInUp();
                       res.then((value) {
-                        if (value.credential != null) {
+                        if (value != null) {
                           String? avatar = widget.auth.getUserPhotoLink();
                           Map<String, dynamic> userData = <String, dynamic>{
                             "avatar": avatar ?? "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f",
@@ -678,16 +688,17 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
             ],
           ),
         ),
-      ),
+      )
+      : Container(),
     );
   }
 
-  List<String> travelCompanies() {
-    return widget.database.getAllTourCompanies();
+  Future<List<String>> travelCompanies() async {
+    return await widget.database.getAllTourCompanies();
   }
 
-  List<DropdownMenuItem<String>> travelCompaniesDropdown() {
-    List<String> travComp = travelCompanies();
+  Future<List<DropdownMenuItem<String>>> travelCompaniesDropdown() async {
+    List<String> travComp = await travelCompanies();
     return travComp.map<DropdownMenuItem<String>>((String company) => DropdownMenuItem<String>(
       value: company,
       child: Text(

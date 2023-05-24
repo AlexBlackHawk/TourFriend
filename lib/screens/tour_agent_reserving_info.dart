@@ -37,11 +37,11 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      reservingInfo = widget.database.getReservingInfo(widget.reservingID);
-      tourInfo = widget.database.getInfoByReference(reservingInfo!["tour"]);
+    setState(() async {
+      reservingInfo = await widget.database.getReservingInfo(widget.reservingID);
+      tourInfo = await widget.database.getInfoByReference(reservingInfo!["tour"]);
       client = reservingInfo!["client"];
-      userInfo = widget.database.getInfoByReference(client!);
+      userInfo = await widget.database.getInfoByReference(client!);
       city = reservingInfo!["city"];
       from = reservingInfo!["from"];
       to = reservingInfo!["to"];
@@ -58,7 +58,7 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("fhgjkl"),
+        title: const Text("Інформація про бронювання"),
         backgroundColor: Colors.blue,
       ),
       backgroundColor: Colors.white,
@@ -303,13 +303,15 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
                   width: double.infinity,
                   child: ElevatedButton(
                       onPressed: () {
-                        String? chatRoom = widget.chat.getChatRoomID(widget.auth.user!.uid, client!.id);
-                        Map<String, dynamic> chatData = <String, dynamic>{
-                          'users': [widget.auth.user!.uid, client!.id],
-                          'last message': null,
-                          'time': null,
-                        };
-                        chatRoom ??= widget.chat.addChatRoom(chatData);
+                        String? chatRoom = widget.chat.getChatRoomID(widget.auth.user!.uid, client!.id) as String?;
+                        if (chatRoom == null) {
+                          Map<String, dynamic> chatData = <String, dynamic>{
+                            'users': [widget.auth.user!.uid, client!.id],
+                            'last message': null,
+                            'time': null,
+                          };
+                          chatRoom ??= widget.chat.addChatRoom(chatData) as String?;
+                        }
                         Navigator.push(
                           context,
                           MaterialPageRoute(
