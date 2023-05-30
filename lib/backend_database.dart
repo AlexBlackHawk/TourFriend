@@ -25,29 +25,19 @@ class DatabaseBackend extends ChangeNotifier{
     DocumentReference tourDocument = db.collection("Users").doc(userID);
     DocumentSnapshot snapshot = await tourDocument.get();
 
-    // Check if the document exists
     if (snapshot.exists) {
-      // Return the data as a Map<String, dynamic>
       return snapshot.data() as Map<String, dynamic>;
     } else {
-      // Document does not exist
       throw Exception('Document does not exist');
     }
-  }
-
-  void getUserSpecificInfo(String userID) {
-
   }
 
   Future<Map<String, dynamic>> getInfoByReference(DocumentReference docRef) async {
     DocumentSnapshot snapshot = await docRef.get();
 
-    // Check if the document exists
     if (snapshot.exists) {
-      // Return the data as a Map<String, dynamic>
       return snapshot.data() as Map<String, dynamic>;
     } else {
-      // Document does not exist
       throw Exception('Document does not exist');
     }
   }
@@ -56,12 +46,9 @@ class DatabaseBackend extends ChangeNotifier{
     DocumentReference tourDocument = db.collection("Tours").doc(tourID);
     DocumentSnapshot snapshot = await tourDocument.get();
 
-    // Check if the document exists
     if (snapshot.exists) {
-      // Return the data as a Map<String, dynamic>
       return snapshot.data() as Map<String, dynamic>;
     } else {
-      // Document does not exist
       throw Exception('Document does not exist');
     }
   }
@@ -70,12 +57,9 @@ class DatabaseBackend extends ChangeNotifier{
     DocumentReference reservingDocument = db.collection("Reservings").doc(reservingID);
     DocumentSnapshot snapshot = await reservingDocument.get();
 
-    // Check if the document exists
     if (snapshot.exists) {
-      // Return the data as a Map<String, dynamic>
       return snapshot.data() as Map<String, dynamic>;
     } else {
-      // Document does not exist
       throw Exception('Document does not exist');
     }
   }
@@ -84,12 +68,9 @@ class DatabaseBackend extends ChangeNotifier{
     DocumentReference chatRoomDocument = db.collection("Chats").doc(chatRoomID);
     DocumentSnapshot snapshot = await chatRoomDocument.get();
 
-    // Check if the document exists
     if (snapshot.exists) {
-      // Return the data as a Map<String, dynamic>
       return snapshot.data() as Map<String, dynamic>;
     } else {
-      // Document does not exist
       throw Exception('Document does not exist');
     }
   }

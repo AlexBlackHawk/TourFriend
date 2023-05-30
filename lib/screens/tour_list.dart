@@ -18,16 +18,14 @@ class TourList extends StatefulWidget {
 }
 
 class _TourListState extends State<TourList> {
-  Stream<QuerySnapshot>? allTours;
-  Map<String, dynamic>? myInfo;
-  List<ListTile> tiles = <ListTile>[];
-  bool? isSaved;
+  late Stream<QuerySnapshot> allTours;
+  // Map<String, dynamic>? myInfo;
+  // List<ListTile> tiles = <ListTile>[];
+  // bool? isSaved;
   @override
   void initState () {
     super.initState();
-    setState(() {
-      allTours = widget.database.getAllTours();
-    });
+    allTours = widget.database.getAllTours();
   }
 
   @override
@@ -38,7 +36,7 @@ class _TourListState extends State<TourList> {
         automaticallyImplyLeading: false,
       ),
       backgroundColor: Colors.white,
-      body: allTours != null ? StreamBuilder<QuerySnapshot>(
+      body: StreamBuilder<QuerySnapshot>(
         stream: allTours,
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.hasError) {
@@ -48,72 +46,80 @@ class _TourListState extends State<TourList> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Text("Loading");
           }
+          
+          return ListView(
+            children: snapshot.data!.docs
+            .map((DocumentSnapshot document) {
+              Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
+              String city = data['city'];
+              String country = data['country'];
+              String name = data['name'];
+              String photo = data['photos'][0];
+              String id = document.id;
+              Future<Map<String, dynamic>> myInfo = widget.database.getUserInfo(widget.auth.user!.uid);
 
-          snapshot.data!.docs.forEach((DocumentSnapshot document) async {
-            Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
-            String city = data['city'];
-            String country = data['country'];
-            String name = data['name'];
-            String photo = data['photos'][0];
-            String id = document.id;
-            myInfo = await widget.database.getUserInfo(widget.auth.user!.uid);
-            isSaved = myInfo!["favorite tours"].contains(id);
-
-            ListTile tile = ListTile(
-              leading: Image(image: NetworkImage(photo),),
-              title: Text(name),
-              subtitle: Row(
-                children: <Widget>[
-                  const Icon(
-                    Icons.place,
-                    color: Colors.black,
-                  ),
-                  Text(
-                    "$city, $country",
-                    style: const TextStyle(
+              return ListTile(
+                leading: Image(image: NetworkImage(photo),),
+                title: Text(name),
+                subtitle: Row(
+                  children: <Widget>[
+                    const Icon(
+                      Icons.place,
                       color: Colors.black,
                     ),
-                  ),
-                ],
-              ),
-              trailing: IconButton(
-                  onPressed: () {
-                    isSaved = isSaved! ? false : true;
-                    setState(() {
-                      if (isSaved!) {
-                        widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
-                          "favorite tours": FieldValue.arrayUnion([id])
-                        });
-                      }
-                      else {
-                        widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
-                          "favorite tours": FieldValue.arrayRemove([id])
-                        });
-                      }
-                    });
+                    Text(
+                      "$city, $country",
+                      style: const TextStyle(
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: FutureBuilder<Map<String, dynamic>> (
+                  future: myInfo,
+                  builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+                    if (snapshot.hasData) {
+                      bool isSaved = snapshot.data!["favorite tours"].contains(id);
+                      return IconButton(
+                          onPressed: () {
+                            isSaved = isSaved ? false : true;
+                            setState(() {
+                              if (isSaved) {
+                                widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
+                                  "favorite tours": FieldValue.arrayUnion([id])
+                                });
+                              }
+                              else {
+                                widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
+                                  "favorite tours": FieldValue.arrayRemove([id])
+                                });
+                              }
+                            });
+                          },
+                          icon: Icon(isSaved ? Icons.favorite : Icons.favorite_border,
+                              color: isSaved ? Colors.red : null));
+                    } else if (snapshot.hasError) {
+                      return const Text('Error');
+                    } else {
+                      return const CircularProgressIndicator();
+                    }
                   },
-                  icon: Icon(isSaved! ? Icons.favorite : Icons.favorite_border,
-                      color: isSaved! ? Colors.red : null)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return ClientTourInformation(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tour: id);
-                    },
-                  ),
-                );
-              },
-            );
-            tiles.add(tile);
-          });
-
-          return ListView(
-            children: tiles,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return ClientTourInformation(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tour: id);
+                      },
+                    ),
+                  );
+                },
+              );
+            }).toList().cast(),
           );
         },
-      )
-        : Container(),
+      ),
     );
   }
 

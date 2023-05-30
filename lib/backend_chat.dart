@@ -189,11 +189,6 @@ class ChatBackend extends ChangeNotifier {
       if(chatDocument.docs.isNotEmpty) {
         id = chatDocument.docs[0].id;
       }
-    // .then((value) {
-    //   if(value.docs.isNotEmpty) {
-    //     id = value.docs[0].id;
-    //   }
-    // });
     return id;
   }
 }

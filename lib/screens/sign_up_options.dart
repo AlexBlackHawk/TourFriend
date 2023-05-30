@@ -28,7 +28,6 @@ class _SignUpOptionsState extends State<SignUpOptions> {
       backgroundColor: Colors.lightBlue,
       body: Container(
         alignment: Alignment.center,
-        // padding: const EdgeInsets.all(32),
         child: SignUpAsButtons(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,),
       ),
     );

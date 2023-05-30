@@ -43,7 +43,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
     Sex.female : "Жіноча"
   };
   bool alreadyProvided = true;
-  List<DropdownMenuItem<String>>? travelCompan;
+  late Future<List<DropdownMenuItem<String>>> travelCompan;
 
   File? imageFile;
   String imagePath = "https://firebasestorage.googleapis.com/v0/b/tourfriend-93f6e.appspot.com/o/avatars%2Fno-profile-picture-icon.png?alt=media&token=248d06cd-1924-4ea2-9d61-11a925c99e7f";
@@ -64,9 +64,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
   @override
   void initState() {
     super.initState();
-    setState(() async {
-      travelCompan = await travelCompaniesDropdown();
-    });
+    travelCompan = travelCompaniesDropdown();
   }
 
   @override
@@ -437,28 +435,55 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
                   const SizedBox(
                     height: 5,
                   ),
-                  DropdownButtonFormField(
-                      decoration: const InputDecoration(
-                        fillColor: Colors.white,
-                        filled: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.white,
+                  FutureBuilder<List<DropdownMenuItem<String>>>(
+                    future: travelCompan,
+                    builder: (BuildContext context, AsyncSnapshot<List<DropdownMenuItem<String>>> snapshot) {
+                      if (snapshot.hasData) {
+                        return DropdownButtonFormField(
+                            decoration: const InputDecoration(
+                              fillColor: Colors.white,
+                              filled: true,
+                              contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.white,
+                                ),
+                              ),
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) => value == null ? "Оберіть компанію" : null,
+                            dropdownColor: Colors.white,
+                            value: selectedTourCompany,
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedTourCompany = newValue!;
+                              });
+                            },
+                            items: snapshot.data
+                        );
+                      } else if (snapshot.hasError) {
+                        return const Center(
+                          child: Text('Error'),
+                        );
+                      } else {
+                        return Center(
+                          child: Column(
+                            children: const [
+                              SizedBox(
+                                width: 60,
+                                height: 60,
+                                child: CircularProgressIndicator(),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(top: 16),
+                                child: Text('Awaiting result...'),
+                              ),
+                            ],
                           ),
-                        ),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) => value == null ? "Оберіть компанію" : null,
-                      dropdownColor: Colors.white,
-                      value: selectedTourCompany,
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedTourCompany = newValue!;
-                        });
-                      },
-                      items: travelCompan
-                  ),
+                        );
+                      }
+                    },
+                  )
                 ],
               ),
               const SizedBox(

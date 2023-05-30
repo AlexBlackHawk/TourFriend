@@ -6,7 +6,7 @@ import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
 
-class Chat extends StatefulWidget {
+class Chat extends StatefulWidget implements PreferredSizeWidget {
   final AuthenticationBackend auth;
   final ChatBackend chat;
   final StorageBackend storage;
@@ -15,27 +15,30 @@ class Chat extends StatefulWidget {
   const Chat({super.key, required this.auth, required this.chat, required this.storage, required this.database, required this.chatRoomId});
 
   @override
+  Size get preferredSize => Size.fromHeight(AppBar().preferredSize.height);
+
+  @override
   State<Chat> createState() => _ChatState();
 }
 
 class _ChatState extends State<Chat> {
   final chatInputController = TextEditingController();
-  Stream<QuerySnapshot>? chats;
-  Map<String, dynamic>? chatRoom;
-  Map<String, dynamic>? userData;
+  late Stream<QuerySnapshot> chats;
+  late Future<Map<String, dynamic>> chatRoom;
+  late Future<Map<String, dynamic>> userData;
 
   @override
   void initState() {
     super.initState();
-    setState(() async {
-      chatRoom = await widget.database.getChatRoomInfo(widget.chatRoomId);
-      chats = widget.chat.getChats(widget.chatRoomId);
-      for (var i = 0; i < chatRoom!["users"].length; i++){
-        if (chatRoom!["users"][i] != widget.auth.user!.uid) {
-          userData = await widget.database.getUserInfo(chatRoom!["users"][i]);
-        }
-      }
-    });
+    chatRoom = widget.database.getChatRoomInfo(widget.chatRoomId);
+    chats = widget.chat.getChats(widget.chatRoomId);
+    // setState(() async {
+    //   for (var i = 0; i < chatRoom!["users"].length; i++){
+    //     if (chatRoom!["users"][i] != widget.auth.user!.uid) {
+    //       userData = widget.database.getUserInfo(chatRoom!["users"][i]);
+    //     }
+    //   }
+    // });
   }
 
   @override
@@ -66,24 +69,29 @@ class _ChatState extends State<Chat> {
 
   @override
   Widget build(BuildContext context) {
-    if (chats != null) {
-      return Scaffold(
-        appBar: getAppBar(),
-        backgroundColor: Colors.white,
-        body: Stack(
-          children: <Widget>[
-            messagesList(),
-            bottomTextBox(),
-          ],
-        ),
-      );
-    }
-    else {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: Container(),
-      );
-    }
+    return Scaffold(
+      appBar: getAppBar(),
+      backgroundColor: Colors.white,
+      body: StreamBuilder<QuerySnapshot>(
+        stream: chats,
+        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.hasError) {
+            return const Text('Something went wrong');
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Text("Loading");
+          }
+
+          return Stack(
+            children: <Widget>[
+              messagesList(),
+              bottomTextBox(),
+            ],
+          );
+        },
+      )
+    );
   }
 
   AppBar getAppBar() {
@@ -91,56 +99,180 @@ class _ChatState extends State<Chat> {
       elevation: 0,
       automaticallyImplyLeading: false,
       backgroundColor: Colors.lightBlue,
-      flexibleSpace: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.only(right: 16),
-          child: Row(
-            children: <Widget>[
-              IconButton(
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-                icon: const Icon(Icons.arrow_back,color: Colors.black,),
+      flexibleSpace: FutureBuilder<Map<String, dynamic>>(
+        future: chatRoom,
+        builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotChatRoom) {
+          if (snapshotChatRoom.hasData) {
+            for (var i = 0; i < snapshotChatRoom.data!["users"].length; i++){
+              if (snapshotChatRoom.data!["users"][i] != widget.auth.user!.uid) {
+                userData = widget.database.getUserInfo(snapshotChatRoom.data!["users"][i]);
+                break;
+              }
+            }
+            return FutureBuilder<Map<String, dynamic>>(
+              future: userData,
+              builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotUser) {
+                if (snapshotUser.hasData) {
+                  // return AppBarChat(
+                  //   name: snapshotUser.data!["name"],
+                  //   avatar: snapshotUser.data!["avatar"],
+                  // );
+                  return SafeArea(
+                    child: Container(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: Row(
+                        children: <Widget>[
+                          IconButton(
+                            onPressed: (){
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(Icons.arrow_back,color: Colors.black,),
+                          ),
+                          const SizedBox(width: 2,),
+                          CircleAvatar(
+                            backgroundImage: NetworkImage(snapshotUser.data!["avatar"]),
+                            maxRadius: 20,
+                          ),
+                          const SizedBox(width: 12,),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Text(snapshotUser.data!["name"],style: const TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                } else if (snapshotUser.hasError) {
+                  return const Center(
+                    child: Text('Error'),
+                  );
+                } else {
+                  return Center(
+                    child: Column(
+                      children: const [
+                        SizedBox(
+                          width: 60,
+                          height: 60,
+                          child: CircularProgressIndicator(),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 16),
+                          child: Text('Awaiting result...'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              },
+            );
+          } else if (snapshotChatRoom.hasError) {
+            return const Center(
+              child: Text('Error'),
+            );
+          } else {
+            return Center(
+              child: Column(
+                children: const [
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircularProgressIndicator(),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: Text('Awaiting result...'),
+                  ),
+                ],
               ),
-              const SizedBox(width: 2,),
-              CircleAvatar(
-                backgroundImage: NetworkImage(userData!["avatar"]),
-                maxRadius: 20,
-              ),
-              const SizedBox(width: 12,),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(userData!["name"],style: const TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+            );
+          }
+        },
       ),
     );
   }
 
   Widget messagesList() {
-    return StreamBuilder(
-      stream: chats,
-      builder: (context, snapshot) {
-        return snapshot.hasData ? ListView.builder(
-          itemCount: snapshot.data!.docs.length,
-          itemBuilder: (context, index) {
-            bool sendByMe = widget.auth.user!.uid == snapshot.data!.docs[index]["sendBy"];
-            return MessageItem(
-              auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,
-              message: snapshot.data!.docs[index]["message"],
-              senderMe: sendByMe,
-              photo: sendByMe ? null : userData!["avatar"],
-            );
-          },
-        )
-            : Container();
+    return FutureBuilder<Map<String, dynamic>>(
+      future: chatRoom,
+      builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotChatRoom) {
+        if (snapshotChatRoom.hasData) {
+          for (var i = 0; i < snapshotChatRoom.data!["users"].length; i++){
+            if (snapshotChatRoom.data!["users"][i] != widget.auth.user!.uid) {
+              userData = widget.database.getUserInfo(snapshotChatRoom.data!["users"][i]);
+              break;
+            }
+          }
+          return FutureBuilder<Map<String, dynamic>>(
+            future: userData,
+            builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotUser) {
+              if (snapshotUser.hasData) {
+                return StreamBuilder(
+                  stream: chats,
+                  builder: (context, snapshot) {
+                    return snapshot.hasData ? ListView.builder(
+                      itemCount: snapshot.data!.docs.length,
+                      itemBuilder: (context, index) {
+                        bool sendByMe = widget.auth.user!.uid == snapshot.data!.docs[index]["sendBy"];
+                        return MessageItem(
+                          auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,
+                          message: snapshot.data!.docs[index]["message"],
+                          senderMe: sendByMe,
+                          photo: sendByMe ? null : snapshotUser.data!["avatar"],
+                        );
+                      },
+                    )
+                        : Container();
+                  },
+                );
+              } else if (snapshotUser.hasError) {
+                return const Center(
+                  child: Text('Error'),
+                );
+              } else {
+                return Center(
+                  child: Column(
+                    children: const [
+                      SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: CircularProgressIndicator(),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: Text('Awaiting result...'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+          );
+        } else if (snapshotChatRoom.hasError) {
+          return const Center(
+            child: Text('Error'),
+          );
+        } else {
+          return Center(
+            child: Column(
+              children: const [
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: CircularProgressIndicator(),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Text('Awaiting result...'),
+                ),
+              ],
+            ),
+          );
+        }
       },
     );
   }

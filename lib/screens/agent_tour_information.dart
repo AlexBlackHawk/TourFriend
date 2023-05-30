@@ -23,7 +23,7 @@ class AgentTourInformation extends StatefulWidget {
 }
 
 class _AgentTourInformationState extends State<AgentTourInformation> with TickerProviderStateMixin {
-  Map<String, dynamic>? tourInfo;
+  late Future<Map<String, dynamic>> tourInfo;
   List<Widget>? photosWidgets;
   List<String>? photos;
   String? name;
@@ -40,6 +40,9 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
   Map<String, String>? servicesDescriptions;
   Map<String, String>? roomsDescriptions;
   Map<String, dynamic>? tourAgentInfo;
+
+  late TabController _servicesTabController;
+  late TabController _roomsTabController;
 
   List<Tab> roomsTabs = <Tab>[];
   List<Widget> roomsTabsViews = <Widget>[];
@@ -115,9 +118,6 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
         .toList();
   }
 
-  late TabController _servicesTabController;
-  late TabController _roomsTabController;
-
   List<Tab> getTabs(Iterable<String> tabsNames) {
     List<Tab> tabs = <Tab>[];
     for (var element in tabsNames) {
@@ -137,30 +137,30 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
   @override
   void initState() {
     super.initState();
-    setState(() async {
-      tourInfo = await widget.database.getTourInfo(widget.tour);
-      photos = tourInfo!["photos"];
-      photosWidgets = imageSliders(photos!);
-      name = tourInfo!["name"];
-      country = tourInfo!["country"];
-      city = tourInfo!["city"];
-      stars = tourInfo!["stars"];
-      serviceType = tourInfo!["service type"];
-      priceUAH = tourInfo!["price UAH"];
-      priceUSD = tourInfo!["price USD"];
-      priceEUR = tourInfo!["price EUR"];
-      aboutTour = tourInfo!["tour information"];
-      generalInformation = tourInfo!["general information"];
-      // tourInformation = tourInfo![""];
-      servicesDescriptions = tourInfo!["services"];
-      roomsDescriptions = tourInfo!["rooms"];
-      _starsOption = getStarOption(stars!);
-      _serviceOption = getServiceOption(serviceType!);
-      _servicesTabController = TabController(vsync: this, length: servicesDescriptions!.length);
-      _roomsTabController = TabController(vsync: this, length: roomsDescriptions!.length);
-      makeServiceTabs();
-      makeRoomTabs();
-    });
+    tourInfo = widget.database.getTourInfo(widget.tour);
+    // setState(() async {
+    //   photos = tourInfo!["photos"];
+    //   photosWidgets = imageSliders(photos!);
+    //   name = tourInfo!["name"];
+    //   country = tourInfo!["country"];
+    //   city = tourInfo!["city"];
+    //   stars = tourInfo!["stars"];
+    //   serviceType = tourInfo!["service type"];
+    //   priceUAH = tourInfo!["price UAH"];
+    //   priceUSD = tourInfo!["price USD"];
+    //   priceEUR = tourInfo!["price EUR"];
+    //   aboutTour = tourInfo!["tour information"];
+    //   generalInformation = tourInfo!["general information"];
+    //   // tourInformation = tourInfo![""];
+    //   servicesDescriptions = tourInfo!["services"];
+    //   roomsDescriptions = tourInfo!["rooms"];
+    //   _starsOption = getStarOption(stars!);
+    //   _serviceOption = getServiceOption(serviceType!);
+    //   _servicesTabController = TabController(vsync: this, length: servicesDescriptions!.length);
+    //   _roomsTabController = TabController(vsync: this, length: roomsDescriptions!.length);
+    //   makeServiceTabs();
+    //   makeRoomTabs();
+    // });
   }
 
   void makeServiceTabs() {
@@ -256,300 +256,348 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
         title: const Text("ghbjlmk"),
       ),
       backgroundColor: Colors.grey.shade300,
-      body: tourInfo != null ? SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(15),
-          child: Column(
-            children: [
-              CarouselSlider(
-                options: CarouselOptions(
-                  aspectRatio: 2.0,
-                  enlargeCenterPage: true,
-                  scrollDirection: Axis.horizontal,
-                  // autoPlay: true,
-                ),
-                items: photosWidgets,
-              ), // Photos
-              ListTile(
-                title: const Text(
-                  "Gallery Hotel Sis",
-                  style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                      color:Colors.blue
-                  ),
-                ),
-                trailing: Column(
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: tourInfo,
+        builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+          if (snapshot.hasData) {
+              photos = snapshot.data!["photos"];
+              photosWidgets = imageSliders(photos!);
+              name = snapshot.data!["name"];
+              country = snapshot.data!["country"];
+              city = snapshot.data!["city"];
+              stars = snapshot.data!["stars"];
+              serviceType = snapshot.data!["service type"];
+              priceUAH = snapshot.data!["price UAH"];
+              priceUSD = snapshot.data!["price USD"];
+              priceEUR = snapshot.data!["price EUR"];
+              aboutTour = snapshot.data!["tour information"];
+              generalInformation = snapshot.data!["general information"];
+              // tourInformation = tourInfo![""];
+              servicesDescriptions = snapshot.data!["services"];
+              roomsDescriptions = snapshot.data!["rooms"];
+              _starsOption = getStarOption(stars!);
+              _serviceOption = getServiceOption(serviceType!);
+              _servicesTabController = TabController(vsync: this, length: servicesDescriptions!.length);
+              _roomsTabController = TabController(vsync: this, length: roomsDescriptions!.length);
+              makeServiceTabs();
+              makeRoomTabs();
+
+            return SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(15),
+                child: Column(
                   children: [
-                    Text(intl.NumberFormat.simpleCurrency(locale: 'uk_UA').format(priceUAH)),
-                    Text(intl.NumberFormat.simpleCurrency(locale: 'en_US').format(priceUSD)),
-                    Text(intl.NumberFormat.simpleCurrency(locale: 'de_DE').format(priceEUR)),
+                    CarouselSlider(
+                      options: CarouselOptions(
+                        aspectRatio: 2.0,
+                        enlargeCenterPage: true,
+                        scrollDirection: Axis.horizontal,
+                        // autoPlay: true,
+                      ),
+                      items: photosWidgets,
+                    ), // Photos
+                    ListTile(
+                      title: Text(
+                        name!,
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color:Colors.blue
+                        ),
+                      ),
+                      trailing: Column(
+                        children: [
+                          Text(intl.NumberFormat.simpleCurrency(locale: 'uk_UA').format(priceUAH)),
+                          Text(intl.NumberFormat.simpleCurrency(locale: 'en_US').format(priceUSD)),
+                          Text(intl.NumberFormat.simpleCurrency(locale: 'de_DE').format(priceEUR)),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        const Text(
+                          "Інформація про тур",
+                        ),
+                        Text(
+                          aboutTour!,
+                        )
+                      ],
+                    ), // About tour
+                    Text(
+                      generalInformation!,
+                    ),// General information
+                    Column(
+                      children: [
+                        const Text(
+                          "Послуги",
+                        ),
+                        Container(
+                          width: double.infinity,
+                          decoration: const BoxDecoration(color: Colors.white),
+                          child: TabBar(
+                            controller: _servicesTabController,
+                            isScrollable: true,
+                            labelColor: Colors.orange,
+                            unselectedLabelColor: Colors.black,
+                            tabs: getTabs(servicesDescriptions!.keys),
+                          ),// ---------------------------------------------------------------------------------
+                        ),
+                        Container(
+                          // color: Colors.white,
+                          // height: 400, //height of TabBarView
+                            decoration: const BoxDecoration(color: Colors.white),
+                            height: 150,
+                            child: TabBarView(
+                                controller: _servicesTabController,
+                                children: getTabsTexts(servicesDescriptions!.values)
+                            )
+                        ),
+                      ],
+                    ),// Services
+                    Column(
+                      children: [
+                        const Text(
+                          "Номери",
+                        ),
+                        Container(
+                          width: double.infinity,
+                          decoration: const BoxDecoration(color: Colors.white),
+                          child: TabBar(
+                            controller: _roomsTabController,
+                            isScrollable: true,
+                            labelColor: Colors.orange,
+                            unselectedLabelColor: Colors.black,
+                            tabs: getTabs(roomsDescriptions!.keys),
+                          ),// ---------------------------------------------------------------------------------
+                        ),
+                        Container(
+                            height: 150,
+                            // height: 400, //height of TabBarView
+                            decoration: const BoxDecoration(color: Colors.white),
+                            child: TabBarView(
+                                controller: _roomsTabController,
+                                children: getTabsTexts(roomsDescriptions!.values)
+                            )
+                        )
+                      ],
+                    ), // Rooms
+                    Column(
+                      children: [
+                        const Text(
+                          "Зірки",
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            RadioListTile(
+                              title: const Text("1"),
+                              activeColor: Colors.black,
+                              value: HotelStar.one,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("2"),
+                              activeColor: Colors.black,
+                              value: HotelStar.two,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("3"),
+                              activeColor: Colors.black,
+                              value: HotelStar.three,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("4"),
+                              activeColor: Colors.black,
+                              value: HotelStar.four,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("5"),
+                              activeColor: Colors.black,
+                              value: HotelStar.five,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                    // ---------------------------------------------------------------------------------------------
+                    Column(
+                      children: [
+                        const Text(
+                          "Харчування",
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            RadioListTile(
+                              title: const Text("All Include (Все включено)"),
+                              activeColor: Colors.black,
+                              value: HotelService.allInclude,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("Сніданок"),
+                              activeColor: Colors.black,
+                              value: HotelService.breakfast,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("Сніданок, обід та вечеря"),
+                              activeColor: Colors.black,
+                              value: HotelService.breakfastDinnerLunch,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("Без харчування"),
+                              activeColor: Colors.black,
+                              value: HotelService.noFood,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("Ultra All Include"),
+                              activeColor: Colors.black,
+                              value: HotelService.ultraAllInclude,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                    // ---------------------------------------------------------------------------------------------// Tour agent
+                    // Container(),
+                    SizedBox(
+                      height: 45,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return EditingTour(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tourID: widget.tour,);
+                                },
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orangeAccent,
+                              // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              textStyle: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'РЕДАГУВАТИ',
+                            style: TextStyle(color: Colors.white),
+                          )
+                      ),
+                    ),
+                    SizedBox(
+                      height: 45,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orangeAccent,
+                              // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              textStyle: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'ВИДАЛИТИ',
+                            style: TextStyle(color: Colors.white),
+                          )
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Column(
-                children: [
-                  const Text(
-                    "Інформація про тур",
+            );
+          } else if (snapshot.hasError) {
+            return const Center(
+              child: Text('Error'),
+            );
+          } else {
+            return Center(
+              child: Column(
+                children: const [
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircularProgressIndicator(),
                   ),
-                  Text(
-                    aboutTour!,
-                  )
-                ],
-              ), // About tour
-              Text(
-                generalInformation!,
-              ),// General information
-              Column(
-                children: [
-                  const Text(
-                    "Послуги",
+                  Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: Text('Awaiting result...'),
                   ),
-                  Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(color: Colors.white),
-                    child: TabBar(
-                      controller: _servicesTabController,
-                      isScrollable: true,
-                      labelColor: Colors.orange,
-                      unselectedLabelColor: Colors.black,
-                      tabs: getTabs(servicesDescriptions!.keys),
-                    ),// ---------------------------------------------------------------------------------
-                  ),
-                  Container(
-                    // color: Colors.white,
-                    // height: 400, //height of TabBarView
-                      decoration: const BoxDecoration(color: Colors.white),
-                      height: 150,
-                      child: TabBarView(
-                          controller: _servicesTabController,
-                          children: getTabsTexts(servicesDescriptions!.values)
-                      )
-                  ),
-                ],
-              ),// Services
-              Column(
-                children: [
-                  const Text(
-                    "Номери",
-                  ),
-                  Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(color: Colors.white),
-                    child: TabBar(
-                      controller: _roomsTabController,
-                      isScrollable: true,
-                      labelColor: Colors.orange,
-                      unselectedLabelColor: Colors.black,
-                      tabs: getTabs(roomsDescriptions!.keys),
-                    ),// ---------------------------------------------------------------------------------
-                  ),
-                  Container(
-                      height: 150,
-                      // height: 400, //height of TabBarView
-                      decoration: const BoxDecoration(color: Colors.white),
-                      child: TabBarView(
-                          controller: _roomsTabController,
-                          children: getTabsTexts(roomsDescriptions!.values)
-                      )
-                  )
-                ],
-              ), // Rooms
-              Column(
-                children: [
-                  const Text(
-                    "Зірки",
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      RadioListTile(
-                        title: const Text("1"),
-                        activeColor: Colors.black,
-                        value: HotelStar.one,
-                        groupValue: _starsOption,
-                        onChanged: (HotelStar? value) {
-                          setState(() {
-                            _starsOption = value;
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: const Text("2"),
-                        activeColor: Colors.black,
-                        value: HotelStar.two,
-                        groupValue: _starsOption,
-                        onChanged: (HotelStar? value) {
-                          setState(() {
-                            _starsOption = value;
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: const Text("3"),
-                        activeColor: Colors.black,
-                        value: HotelStar.three,
-                        groupValue: _starsOption,
-                        onChanged: (HotelStar? value) {
-                          setState(() {
-                            _starsOption = value;
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: const Text("4"),
-                        activeColor: Colors.black,
-                        value: HotelStar.four,
-                        groupValue: _starsOption,
-                        onChanged: (HotelStar? value) {
-                          setState(() {
-                            _starsOption = value;
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: const Text("5"),
-                        activeColor: Colors.black,
-                        value: HotelStar.five,
-                        groupValue: _starsOption,
-                        onChanged: (HotelStar? value) {
-                          setState(() {
-                            _starsOption = value;
-                          });
-                        },
-                      ),
-                    ],
-                  )
                 ],
               ),
-              // ---------------------------------------------------------------------------------------------
-              Column(
-                children: [
-                  const Text(
-                    "Харчування",
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      RadioListTile(
-                        title: const Text("All Include (Все включено)"),
-                        activeColor: Colors.black,
-                        value: HotelService.allInclude,
-                        groupValue: _serviceOption,
-                        onChanged: (HotelService? value) {
-                          setState(() {
-                            _serviceOption = value;
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: const Text("Сніданок"),
-                        activeColor: Colors.black,
-                        value: HotelService.breakfast,
-                        groupValue: _serviceOption,
-                        onChanged: (HotelService? value) {
-                          setState(() {
-                            _serviceOption = value;
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: const Text("Сніданок, обід та вечеря"),
-                        activeColor: Colors.black,
-                        value: HotelService.breakfastDinnerLunch,
-                        groupValue: _serviceOption,
-                        onChanged: (HotelService? value) {
-                          setState(() {
-                            _serviceOption = value;
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: const Text("Без харчування"),
-                        activeColor: Colors.black,
-                        value: HotelService.noFood,
-                        groupValue: _serviceOption,
-                        onChanged: (HotelService? value) {
-                          setState(() {
-                            _serviceOption = value;
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: const Text("Ultra All Include"),
-                        activeColor: Colors.black,
-                        value: HotelService.ultraAllInclude,
-                        groupValue: _serviceOption,
-                        onChanged: (HotelService? value) {
-                          setState(() {
-                            _serviceOption = value;
-                          });
-                        },
-                      ),
-                    ],
-                  )
-                ],
-              ),
-              // ---------------------------------------------------------------------------------------------// Tour agent
-              // Container(),
-              SizedBox(
-                height: 45,
-                width: double.infinity,
-                child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return EditingTour(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, tourID: widget.tour,);
-                          },
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent,
-                        // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30.0),
-                        ),
-                        textStyle: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold)),
-                    child: const Text(
-                      'РЕДАГУВАТИ',
-                      style: TextStyle(color: Colors.white),
-                    )
-                ),
-              ),
-              SizedBox(
-                height: 45,
-                width: double.infinity,
-                child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent,
-                        // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30.0),
-                        ),
-                        textStyle: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold)),
-                    child: const Text(
-                      'ВИДАЛИТИ',
-                      style: TextStyle(color: Colors.white),
-                    )
-                ),
-              ),
-            ],
-          ),
-        ),
+            );
+          }
+        },
       )
-      : Container(),
     );
   }
 

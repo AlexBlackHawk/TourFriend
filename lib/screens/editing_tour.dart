@@ -39,7 +39,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   Map<String, String> servicesDescription = <String, String>{};
   Map<String, String> roomsDescription = <String, String>{};
 
-  Map<String, dynamic>? tourInfo;
+  late Future<Map<String, dynamic>> tourInfo;
   List<Widget>? photosWidgets;
   List<dynamic>? photos;
   String? name;
@@ -55,7 +55,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   // String? tourInformation;
   Map<String, String>? servicesDescriptions;
   Map<String, String>? roomsDescriptions;
-  Map<String, dynamic>? tourAgentInfo;
+  late Future<Map<String, dynamic>> tourAgentInfo;
 
   List<String> deletedPhotos = <String>[];
   Map<String, File> updatedPhotos = <String, File>{};
@@ -115,7 +115,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
     }
   }
 
-  List<Widget> imageSliders(List<String> photos) {
+  List<Widget> imageSliders(List<dynamic> photos) {
     return photos.map((item) => Container(
       margin: const EdgeInsets.all(5.0),
       child: ClipRRect(
@@ -190,30 +190,30 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    setState(() async {
-      tourInfo = await widget.database.getTourInfo(widget.tourID);
-      photos = tourInfo!["photos"];
-      // photosWidgets = imageSliders(photos!);
-      name = tourInfo!["name"];
-      country = tourInfo!["country"];
-      city = tourInfo!["city"];
-      stars = tourInfo!["stars"];
-      serviceType = tourInfo!["service type"];
-      priceUAH = tourInfo!["price UAH"];
-      priceUSD = tourInfo!["price USD"];
-      priceEUR = tourInfo!["price EUR"];
-      aboutTour = tourInfo!["about tour"];
-      generalInformation = tourInfo!["general information"];
-      // tourInformation = tourInfo!["tour information"];
-      servicesDescriptions = tourInfo!["services descriptions"];
-      roomsDescriptions = tourInfo!["rooms descriptions"];
-      _starsOption = getStarOption(stars!);
-      _serviceOption = getServiceOption(serviceType!);
-      _servicesTabController = TabController(vsync: this, length: servicesTabs.length);
-      _roomsTabController = TabController(vsync: this, length: roomsTabs.length);
-      makeServiceTabs();
-      makeRoomTabs();
-    });
+    tourInfo = widget.database.getTourInfo(widget.tourID);
+    // setState(() async {
+    //   photos = tourInfo!["photos"];
+    //   photosWidgets = imageSliders(photos!);
+    //   name = tourInfo!["name"];
+    //   country = tourInfo!["country"];
+    //   city = tourInfo!["city"];
+    //   stars = tourInfo!["stars"];
+    //   serviceType = tourInfo!["service type"];
+    //   priceUAH = tourInfo!["price UAH"];
+    //   priceUSD = tourInfo!["price USD"];
+    //   priceEUR = tourInfo!["price EUR"];
+    //   aboutTour = tourInfo!["about tour"];
+    //   generalInformation = tourInfo!["general information"];
+    //   // tourInformation = tourInfo!["tour information"];
+    //   servicesDescriptions = tourInfo!["services descriptions"];
+    //   roomsDescriptions = tourInfo!["rooms descriptions"];
+    //   _starsOption = getStarOption(stars!);
+    //   _serviceOption = getServiceOption(serviceType!);
+    //   _servicesTabController = TabController(vsync: this, length: servicesTabs.length);
+    //   _roomsTabController = TabController(vsync: this, length: roomsTabs.length);
+    //   makeServiceTabs();
+    //   makeRoomTabs();
+    // });
   }
 
   @override
@@ -328,608 +328,656 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
           title: const Text("ghbjlmk"),
         ),
         backgroundColor: Colors.grey.shade300,
-        body: tourInfo != null ? SingleChildScrollView(
-          scrollDirection: Axis.vertical,
-          child: Container(
-            // alignment: Alignment.center,
-            padding: const EdgeInsets.all(15),
-            child: Column(
-              children: [
-                Column(
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: tourInfo,
+        builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+          if (snapshot.hasData) {
+            photos = snapshot.data!["photos"];
+            photosWidgets = imageSliders(photos!);
+            name = snapshot.data!["name"];
+            country = snapshot.data!["country"];
+            city = snapshot.data!["city"];
+            stars = snapshot.data!["stars"];
+            serviceType = snapshot.data!["service type"];
+            priceUAH = snapshot.data!["price UAH"];
+            priceUSD = snapshot.data!["price USD"];
+            priceEUR = snapshot.data!["price EUR"];
+            aboutTour = snapshot.data!["about tour"];
+            generalInformation = snapshot.data!["general information"];
+            // tourInformation = tourInfo!["tour information"];
+            servicesDescriptions = snapshot.data!["services descriptions"];
+            roomsDescriptions = snapshot.data!["rooms descriptions"];
+            _starsOption = getStarOption(stars!);
+            _serviceOption = getServiceOption(serviceType!);
+            _servicesTabController = TabController(vsync: this, length: servicesTabs.length);
+            _roomsTabController = TabController(vsync: this, length: roomsTabs.length);
+            makeServiceTabs();
+            makeRoomTabs();
+
+            return SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Container(
+                // alignment: Alignment.center,
+                padding: const EdgeInsets.all(15),
+                child: Column(
                   children: [
-                    CarouselSlider(
-                      options: CarouselOptions(
-                        aspectRatio: 2.0,
-                        enlargeCenterPage: true,
-                        scrollDirection: Axis.horizontal,
-                      ),
-                      items: getBB(),
-                    ),
-                    const SizedBox(height: 5),
-                    SizedBox(
-                      height: 50,
-                      width: double.infinity,
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                            textStyle: const TextStyle(
-                                fontSize: 20,
-                                color: Colors. white,
-                                fontWeight: FontWeight.bold
-                            )
-                        ),
-                        child: const Icon(Icons.add),
-                        onPressed: () {
-                          setState(() {
-                            _getFromGallery();
-                            if (imageFile != null) {
-                              photos!.add(imageFile);
-                            }
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Назва",
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color:Colors.black
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextFormField(
-                      keyboardType: TextInputType.name,
-                      initialValue: name,
-                      textAlign: TextAlign.start,
-                      decoration: const InputDecoration(
-                        fillColor: Colors.white,
-                        filled: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.white,
-                          ),
-                        ),
-                        border: OutlineInputBorder(),
-                      ),
-                      cursorColor: Colors.black,
-                      controller: nameController,
-                    ),
-                    const SizedBox(
-                      height: 8.0,
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Ціна",
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color:Colors.black
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    Row(
-                      // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    Column(
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "UAH",
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                    color:Colors.black
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              TextFormField(
-                                keyboardType: TextInputType.number,
-                                initialValue: priceUAH.toString(),
-                                textAlign: TextAlign.start,
-                                decoration: const InputDecoration(
-                                  fillColor: Colors.white,
-                                  filled: true,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  border: OutlineInputBorder(),
-                                ),
-                                cursorColor: Colors.black,
-                                controller: priceUAHController,
-                              ),
-                              // const SizedBox(
-                              //   height: 8.0,
-                              // ),
-                            ],
+                        CarouselSlider(
+                          options: CarouselOptions(
+                            aspectRatio: 2.0,
+                            enlargeCenterPage: true,
+                            scrollDirection: Axis.horizontal,
                           ),
+                          items: getBB(),
                         ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "USD",
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                    color:Colors.black
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              TextFormField(
-                                keyboardType: TextInputType.number,
-                                initialValue: priceUSD.toString(),
-                                textAlign: TextAlign.start,
-                                decoration: const InputDecoration(
-                                  fillColor: Colors.white,
-                                  filled: true,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  border: OutlineInputBorder(),
-                                ),
-                                cursorColor: Colors.black,
-                                controller: priceUSDController,
-                              ),
-                              // const SizedBox(
-                              //   height: 8.0,
-                              // ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "EUR",
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                    color:Colors.black
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              TextFormField(
-                                keyboardType: TextInputType.number,
-                                initialValue: priceEUR.toString(),
-                                textAlign: TextAlign.start,
-                                decoration: const InputDecoration(
-                                  fillColor: Colors.white,
-                                  filled: true,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  border: OutlineInputBorder(),
-                                ),
-                                cursorColor: Colors.black,
-                                controller: priceEURController,
-                              ),
-                              // const SizedBox(
-                              //   height: 8.0,
-                              // ),
-                            ],
+                        const SizedBox(height: 5),
+                        SizedBox(
+                          height: 50,
+                          width: double.infinity,
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                                textStyle: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors. white,
+                                    fontWeight: FontWeight.bold
+                                )
+                            ),
+                            child: const Icon(Icons.add),
+                            onPressed: () {
+                              setState(() {
+                                _getFromGallery();
+                                if (imageFile != null) {
+                                  photos!.add(imageFile);
+                                }
+                              });
+                            },
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(
-                      height: 8.0,
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Опис туру",
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color:Colors.black
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextFormField(
-                      keyboardType: TextInputType.name,
-                      initialValue: aboutTour,
-                      textAlign: TextAlign.start,
-                      // minLines: null,
-                      maxLines: null,
-                      decoration: const InputDecoration(
-                        fillColor: Colors.white,
-                        filled: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.white,
+                    const SizedBox(height: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Назва",
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color:Colors.black
                           ),
                         ),
-                        border: OutlineInputBorder(),
-                      ),
-                      cursorColor: Colors.black,
-                      controller: descriptionController,
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        TextFormField(
+                          keyboardType: TextInputType.name,
+                          initialValue: name,
+                          textAlign: TextAlign.start,
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.white,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          cursorColor: Colors.black,
+                          controller: nameController,
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                      ],
                     ),
-                    const SizedBox(
-                      height: 8.0,
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Загальна інформація",
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color:Colors.black
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextFormField(
-                      keyboardType: TextInputType.name,
-                      initialValue: generalInformation,
-                      textAlign: TextAlign.start,
-                      // expands: true,
-                      // minLines: null,
-                      maxLines: null,
-                      decoration: const InputDecoration(
-                        fillColor: Colors.white,
-                        filled: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.white,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Ціна",
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color:Colors.black
                           ),
                         ),
-                        border: OutlineInputBorder(),
-                      ),
-                      cursorColor: Colors.black,
-                      controller: generalInfoController,
+                        const SizedBox(
+                          height: 15,
+                        ),
+                        Row(
+                          // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "UAH",
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w400,
+                                        color:Colors.black
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  TextFormField(
+                                    keyboardType: TextInputType.number,
+                                    initialValue: priceUAH.toString(),
+                                    textAlign: TextAlign.start,
+                                    decoration: const InputDecoration(
+                                      fillColor: Colors.white,
+                                      filled: true,
+                                      contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    cursorColor: Colors.black,
+                                    controller: priceUAHController,
+                                  ),
+                                  // const SizedBox(
+                                  //   height: 8.0,
+                                  // ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "USD",
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w400,
+                                        color:Colors.black
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  TextFormField(
+                                    keyboardType: TextInputType.number,
+                                    initialValue: priceUSD.toString(),
+                                    textAlign: TextAlign.start,
+                                    decoration: const InputDecoration(
+                                      fillColor: Colors.white,
+                                      filled: true,
+                                      contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    cursorColor: Colors.black,
+                                    controller: priceUSDController,
+                                  ),
+                                  // const SizedBox(
+                                  //   height: 8.0,
+                                  // ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "EUR",
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w400,
+                                        color:Colors.black
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  TextFormField(
+                                    keyboardType: TextInputType.number,
+                                    initialValue: priceEUR.toString(),
+                                    textAlign: TextAlign.start,
+                                    decoration: const InputDecoration(
+                                      fillColor: Colors.white,
+                                      filled: true,
+                                      contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    cursorColor: Colors.black,
+                                    controller: priceEURController,
+                                  ),
+                                  // const SizedBox(
+                                  //   height: 8.0,
+                                  // ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                      ],
                     ),
-                    const SizedBox(
-                      height: 8.0,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Опис туру",
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color:Colors.black
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        TextFormField(
+                          keyboardType: TextInputType.name,
+                          initialValue: aboutTour,
+                          textAlign: TextAlign.start,
+                          // minLines: null,
+                          maxLines: null,
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.white,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          cursorColor: Colors.black,
+                          controller: descriptionController,
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Послуги",
-                      ),
-                      Container(
-                        width: double.infinity,
-                        decoration: const BoxDecoration(color: Colors.white),
-                        child: TabBar(
-                            controller: _servicesTabController,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Загальна інформація",
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color:Colors.black
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        TextFormField(
+                          keyboardType: TextInputType.name,
+                          initialValue: generalInformation,
+                          textAlign: TextAlign.start,
+                          // expands: true,
+                          // minLines: null,
+                          maxLines: null,
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.white,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          cursorColor: Colors.black,
+                          controller: generalInfoController,
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                      ],
+                    ),
+                    Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Послуги",
+                          ),
+                          Container(
+                            width: double.infinity,
+                            decoration: const BoxDecoration(color: Colors.white),
+                            child: TabBar(
+                                controller: _servicesTabController,
+                                isScrollable: true,
+                                labelColor: Colors.orange,
+                                unselectedLabelColor: Colors.black,
+                                tabs: servicesTabs
+                            ),// ---------------------------------------------------------------------------------
+                          ),
+                          Container(
+                            // color: Colors.white,
+                            // height: 400, //height of TabBarView
+                              decoration: const BoxDecoration(color: Colors.white),
+                              height: 150,
+                              child: TabBarView(
+                                  controller: _servicesTabController,
+                                  children: servicesTabsViews
+                              )
+                          ),
+                          SizedBox(
+                            height: 50,
+                            width: double.infinity,
+                            child: TextButton(
+                              style: TextButton.styleFrom(
+                                  backgroundColor: Colors.black,
+                                  // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                                  textStyle: const TextStyle(
+                                      fontSize: 20,
+                                      color: Colors. white,
+                                      fontWeight: FontWeight.bold
+                                  )
+                              ),
+                              child: const Icon(Icons.add, color: Colors.white,),
+                              onPressed: () {
+                                _serviceNameInputDialog(context);
+                              },
+                            ),
+                          ),
+                        ]
+                    ),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Номери",
+                        ),
+                        Container(
+                          width: double.infinity,
+                          decoration: const BoxDecoration(color: Colors.white),
+                          child: TabBar(
+                            controller: _roomsTabController,
                             isScrollable: true,
                             labelColor: Colors.orange,
                             unselectedLabelColor: Colors.black,
-                            tabs: servicesTabs
-                        ),// ---------------------------------------------------------------------------------
-                      ),
-                      Container(
-                        // color: Colors.white,
-                        // height: 400, //height of TabBarView
-                          decoration: const BoxDecoration(color: Colors.white),
-                          height: 150,
-                          child: TabBarView(
-                              controller: _servicesTabController,
-                              children: servicesTabsViews
-                          )
-                      ),
-                      SizedBox(
-                        height: 50,
-                        width: double.infinity,
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                              textStyle: const TextStyle(
-                                  fontSize: 20,
-                                  color: Colors. white,
-                                  fontWeight: FontWeight.bold
-                              )
-                          ),
-                          child: const Icon(Icons.add, color: Colors.white,),
-                          onPressed: () {
-                            _serviceNameInputDialog(context);
-                          },
+                            tabs: roomsTabs,
+                          ),// ---------------------------------------------------------------------------------
                         ),
-                      ),
-                    ]
-                ),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Номери",
-                    ),
-                    Container(
-                      width: double.infinity,
-                      decoration: const BoxDecoration(color: Colors.white),
-                      child: TabBar(
-                        controller: _roomsTabController,
-                        isScrollable: true,
-                        labelColor: Colors.orange,
-                        unselectedLabelColor: Colors.black,
-                        tabs: roomsTabs,
-                      ),// ---------------------------------------------------------------------------------
-                    ),
-                    Container(
-                        height: 150,
-                        // height: 400, //height of TabBarView
-                        decoration: const BoxDecoration(color: Colors.white),
-                        child: TabBarView(
-                            controller: _roomsTabController,
-                            children: roomsTabsViews
-                        )
-                    ),
-                    SizedBox(
-                      height: 50,
-                      width: double.infinity,
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                            textStyle: const TextStyle(
-                                fontSize: 20,
-                                color: Colors. white,
-                                fontWeight: FontWeight.bold
+                        Container(
+                            height: 150,
+                            // height: 400, //height of TabBarView
+                            decoration: const BoxDecoration(color: Colors.white),
+                            child: TabBarView(
+                                controller: _roomsTabController,
+                                children: roomsTabsViews
                             )
                         ),
-                        child: const Icon(Icons.add, color: Colors.white,),
-                        onPressed: () {
-                          _roomNameInputDialog(context);
-                        },
+                        SizedBox(
+                          height: 50,
+                          width: double.infinity,
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                                textStyle: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors. white,
+                                    fontWeight: FontWeight.bold
+                                )
+                            ),
+                            child: const Icon(Icons.add, color: Colors.white,),
+                            onPressed: () {
+                              _roomNameInputDialog(context);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 2.0,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Зірки",
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            RadioListTile(
+                              title: const Text("1"),
+                              activeColor: Colors.black,
+                              value: HotelStar.one,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("2"),
+                              activeColor: Colors.black,
+                              value: HotelStar.two,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("3"),
+                              activeColor: Colors.black,
+                              value: HotelStar.three,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("4"),
+                              activeColor: Colors.black,
+                              value: HotelStar.four,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("5"),
+                              activeColor: Colors.black,
+                              value: HotelStar.five,
+                              groupValue: _starsOption,
+                              onChanged: (HotelStar? value) {
+                                setState(() {
+                                  _starsOption = value;
+                                });
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                    // // ---------------------------
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Харчування",
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            RadioListTile(
+                              title: const Text("All Include (Все включено)"),
+                              activeColor: Colors.black,
+                              value: HotelService.allInclude,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("Сніданок"),
+                              activeColor: Colors.black,
+                              value: HotelService.breakfast,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("Сніданок, обід та вечеря"),
+                              activeColor: Colors.black,
+                              value: HotelService.breakfastDinnerLunch,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("Без харчування"),
+                              activeColor: Colors.black,
+                              value: HotelService.noFood,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                            RadioListTile(
+                              title: const Text("Ultra All Include"),
+                              activeColor: Colors.black,
+                              value: HotelService.ultraAllInclude,
+                              groupValue: _serviceOption,
+                              onChanged: (HotelService? value) {
+                                setState(() {
+                                  _serviceOption = value;
+                                });
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 10.0,
+                    ),
+                    // tour characteristics
+                    SizedBox(
+                      height: 45,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                          onPressed: () {
+                            String userID = widget.auth.user!.uid;
+
+                            servicesDescription = serviceDictionary();
+                            roomsDescription = roomDictionary();
+
+                            deletePhotos();
+                            updatePhotos(widget.tourID);
+                            // addPhotos(widget.tourID);
+
+                            Map<String, dynamic> tourInfo = <String, dynamic>{
+                              "photos": photos,
+                              "name": nameController.text,
+                              "price UAH": priceUAHController.text,
+                              "price USD": priceUSDController.text,
+                              "price EUR": priceEURController.text,
+                              "tour information": descriptionController.text,
+                              "general information": generalInfoController.text,
+                              "services": servicesDescription,
+                              "rooms": roomsDescription,
+                              "food": serviceString[_serviceOption],
+                              "stars": starsString[_starsOption],
+                              "tour agent": widget.database.db.doc("Users/$userID"),
+                            };
+                            widget.database.updateDocumentData("Tours", widget.tourID, tourInfo);
+                            const snackBar = SnackBar(
+                              content: Text('Інформацію успішно відредаговано'),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                          },
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              textStyle: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'ЗБЕРЕГТИ',
+                            style: TextStyle(color: Colors.white),
+                          )
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(
-                  height: 2.0,
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Зірки",
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        RadioListTile(
-                          title: const Text("1"),
-                          activeColor: Colors.black,
-                          value: HotelStar.one,
-                          groupValue: _starsOption,
-                          onChanged: (HotelStar? value) {
-                            setState(() {
-                              _starsOption = value;
-                            });
-                          },
-                        ),
-                        RadioListTile(
-                          title: const Text("2"),
-                          activeColor: Colors.black,
-                          value: HotelStar.two,
-                          groupValue: _starsOption,
-                          onChanged: (HotelStar? value) {
-                            setState(() {
-                              _starsOption = value;
-                            });
-                          },
-                        ),
-                        RadioListTile(
-                          title: const Text("3"),
-                          activeColor: Colors.black,
-                          value: HotelStar.three,
-                          groupValue: _starsOption,
-                          onChanged: (HotelStar? value) {
-                            setState(() {
-                              _starsOption = value;
-                            });
-                          },
-                        ),
-                        RadioListTile(
-                          title: const Text("4"),
-                          activeColor: Colors.black,
-                          value: HotelStar.four,
-                          groupValue: _starsOption,
-                          onChanged: (HotelStar? value) {
-                            setState(() {
-                              _starsOption = value;
-                            });
-                          },
-                        ),
-                        RadioListTile(
-                          title: const Text("5"),
-                          activeColor: Colors.black,
-                          value: HotelStar.five,
-                          groupValue: _starsOption,
-                          onChanged: (HotelStar? value) {
-                            setState(() {
-                              _starsOption = value;
-                            });
-                          },
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-                // // ---------------------------
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Харчування",
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        RadioListTile(
-                          title: const Text("All Include (Все включено)"),
-                          activeColor: Colors.black,
-                          value: HotelService.allInclude,
-                          groupValue: _serviceOption,
-                          onChanged: (HotelService? value) {
-                            setState(() {
-                              _serviceOption = value;
-                            });
-                          },
-                        ),
-                        RadioListTile(
-                          title: const Text("Сніданок"),
-                          activeColor: Colors.black,
-                          value: HotelService.breakfast,
-                          groupValue: _serviceOption,
-                          onChanged: (HotelService? value) {
-                            setState(() {
-                              _serviceOption = value;
-                            });
-                          },
-                        ),
-                        RadioListTile(
-                          title: const Text("Сніданок, обід та вечеря"),
-                          activeColor: Colors.black,
-                          value: HotelService.breakfastDinnerLunch,
-                          groupValue: _serviceOption,
-                          onChanged: (HotelService? value) {
-                            setState(() {
-                              _serviceOption = value;
-                            });
-                          },
-                        ),
-                        RadioListTile(
-                          title: const Text("Без харчування"),
-                          activeColor: Colors.black,
-                          value: HotelService.noFood,
-                          groupValue: _serviceOption,
-                          onChanged: (HotelService? value) {
-                            setState(() {
-                              _serviceOption = value;
-                            });
-                          },
-                        ),
-                        RadioListTile(
-                          title: const Text("Ultra All Include"),
-                          activeColor: Colors.black,
-                          value: HotelService.ultraAllInclude,
-                          groupValue: _serviceOption,
-                          onChanged: (HotelService? value) {
-                            setState(() {
-                              _serviceOption = value;
-                            });
-                          },
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-                const SizedBox(
-                  height: 10.0,
-                ),
-                // tour characteristics
-                SizedBox(
-                  height: 45,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                      onPressed: () {
-                        String userID = widget.auth.user!.uid;
-
-                        servicesDescription = serviceDictionary();
-                        roomsDescription = roomDictionary();
-
-                        deletePhotos();
-                        updatePhotos(widget.tourID);
-                        // addPhotos(widget.tourID);
-
-                        Map<String, dynamic> tourInfo = <String, dynamic>{
-                          "photos": photos,
-                          "name": nameController.text,
-                          "price UAH": priceUAHController.text,
-                          "price USD": priceUSDController.text,
-                          "price EUR": priceEURController.text,
-                          "tour information": descriptionController.text,
-                          "general information": generalInfoController.text,
-                          "services": servicesDescription,
-                          "rooms": roomsDescription,
-                          "food": serviceString[_serviceOption],
-                          "stars": starsString[_starsOption],
-                          "tour agent": widget.database.db.doc("Users/$userID"),
-                        };
-                        widget.database.updateDocumentData("Tours", widget.tourID, tourInfo);
-                        const snackBar = SnackBar(
-                          content: Text('Інформацію успішно відредаговано'),
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                      },
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                          ),
-                          textStyle: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold)),
-                      child: const Text(
-                        'ЗБЕРЕГТИ',
-                        style: TextStyle(color: Colors.white),
-                      )
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return const Center(
+              child: Text('Error'),
+            );
+          } else {
+            return Center(
+              child: Column(
+                children: const [
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircularProgressIndicator(),
                   ),
-                ),
-              ],
-            ),
-          ),
-        )
-            : Container(),
+                  Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: Text('Awaiting result...'),
+                  ),
+                ],
+              ),
+            );
+          }
+        },
+      )
     );
   }
 

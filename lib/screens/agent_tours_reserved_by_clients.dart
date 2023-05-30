@@ -19,98 +19,275 @@ class AgentToursReservedClients extends StatefulWidget {
 
 class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
   List<GestureDetector> dataDR = <GestureDetector>[];
+  late Future<Map<String, dynamic>> userInfo;
   //= List.from(widget.database.db.collection("Users").doc(widget.auth.user!.uid));
 
   @override
   void initState() {
     super.initState();
-    setState(() {
-      getData();
-    });
+    userInfo = widget.database.getUserInfo(widget.auth.user!.uid);
+    // setState(() {
+    //   getData();
+    // });
   }
 
-  getData() async{
-    DocumentSnapshot docs = await widget.database.db.collection("Users").doc(widget.auth.user!.uid).get();
-    for (var element in docs['ordered tours']) {
-      Map<String, dynamic> reservingData = await widget.database.getInfoByReference(element);
-      Map<String, dynamic> userData = await widget.database.getInfoByReference(reservingData["client"]);
-      Map<String, dynamic> tourData = await widget.database.getInfoByReference(reservingData["tour"]);
-      String city = tourData['city'];
-      String country = tourData['country'];
-      String name = tourData['name'];
-      String photo = tourData['photo'][0];
-      String id = element.id;
-
-      GestureDetector gd = GestureDetector(
-        onTap: (){
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) {
-                return TourAgentReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: id,);
-              },
-            ),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.only(left: 16,right: 16,top: 10,bottom: 10),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Row(
-                  children: <Widget>[
-                    Image(image: NetworkImage(photo),),
-                    const SizedBox(width: 16,),
-                    Expanded(
-                      child: Container(
-                        color: Colors.transparent,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(name, style: const TextStyle(fontSize: 16),),
-                            const SizedBox(height: 6,),
-                            Text("$city, $country ",style: TextStyle(fontSize: 13,color: Colors.grey.shade600, fontWeight: FontWeight.normal),),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                color: Colors.white,
-                child: Column(
-                    children: <Widget> [
-                      Expanded(
-                        child: CircleAvatar(
-                          backgroundImage: NetworkImage(userData["avatar"]),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          userData["name"],
-                        ),
-                      ),
-                    ]
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-      dataDR.add(gd);
-    }
-  }
+  // getData() async{
+  //   DocumentSnapshot docs = await widget.database.db.collection("Users").doc(widget.auth.user!.uid).get();
+  //   for (var element in docs['ordered tours']) {
+  //     Map<String, dynamic> reservingData = await widget.database.getInfoByReference(element);
+  //     Map<String, dynamic> userData = await widget.database.getInfoByReference(reservingData["client"]);
+  //     Map<String, dynamic> tourData = await widget.database.getInfoByReference(reservingData["tour"]);
+  //     String city = tourData['city'];
+  //     String country = tourData['country'];
+  //     String name = tourData['name'];
+  //     String photo = tourData['photo'][0];
+  //     String id = element.id;
+  //
+  //     GestureDetector gd = GestureDetector(
+  //       onTap: (){
+  //         Navigator.push(
+  //           context,
+  //           MaterialPageRoute(
+  //             builder: (context) {
+  //               return TourAgentReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: id,);
+  //             },
+  //           ),
+  //         );
+  //       },
+  //       child: Container(
+  //         padding: const EdgeInsets.only(left: 16,right: 16,top: 10,bottom: 10),
+  //         child: Row(
+  //           children: <Widget>[
+  //             Expanded(
+  //               child: Row(
+  //                 children: <Widget>[
+  //                   Image(image: NetworkImage(photo),),
+  //                   const SizedBox(width: 16,),
+  //                   Expanded(
+  //                     child: Container(
+  //                       color: Colors.transparent,
+  //                       child: Column(
+  //                         crossAxisAlignment: CrossAxisAlignment.start,
+  //                         children: <Widget>[
+  //                           Text(name, style: const TextStyle(fontSize: 16),),
+  //                           const SizedBox(height: 6,),
+  //                           Text("$city, $country ",style: TextStyle(fontSize: 13,color: Colors.grey.shade600, fontWeight: FontWeight.normal),),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             Container(
+  //               color: Colors.white,
+  //               child: Column(
+  //                   children: <Widget> [
+  //                     Expanded(
+  //                       child: CircleAvatar(
+  //                         backgroundImage: NetworkImage(userData["avatar"]),
+  //                       ),
+  //                     ),
+  //                     Expanded(
+  //                       child: Text(
+  //                         userData["name"],
+  //                       ),
+  //                     ),
+  //                   ]
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     );
+  //     dataDR.add(gd);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // appBar: getAppBar(context),
       backgroundColor: Colors.white,
-      body: dataDR.isNotEmpty ? ListView(
-        children: dataDR,
-      )
-          : Container(),
+        body: FutureBuilder<Map<String, dynamic>>(
+          future: userInfo,
+          builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotUser) {
+            if (snapshotUser.hasData) {
+              return ListView.builder(
+                itemCount: snapshotUser.data!["ordered tours"].length, // тут ідентифікатори резервувань, не турів
+                itemBuilder: (BuildContext context, int index) {
+                  String idReserve = snapshotUser.data!["ordered tours"][index];
+                  DocumentReference docRefTour = widget.database.db.doc("Tours/$idReserve");
+                  Future<Map<String, dynamic>> tourInfo = widget.database.getInfoByReference(docRefTour);
+                  return FutureBuilder<Map<String, dynamic>>(
+                    future: tourInfo,
+                    builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotReserve) {
+                      if (snapshotReserve.hasData) {
+                        Future<Map<String, dynamic>> tourData = widget.database.getInfoByReference(snapshotReserve.data!["tour"]);
+                        return FutureBuilder<Map<String, dynamic>>(
+                          future: tourData,
+                          builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotTour) {
+                            if (snapshotTour.hasData) {
+                              String city = snapshotTour.data!['city'];
+                              String country = snapshotTour.data!['country'];
+                              String name = snapshotTour.data!['name'];
+                              String photo = snapshotTour.data!['photo'][0];
+                              Future<Map<String, dynamic>> clientData = widget.database.getInfoByReference(snapshotReserve.data!["client"]);
+                              return GestureDetector(
+                                onTap: (){
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return TourAgentReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: idReserve,);
+                                      },
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 16,right: 16,top: 10,bottom: 10),
+                                  child: Row(
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: Row(
+                                          children: <Widget>[
+                                            Image(image: NetworkImage(photo),),
+                                            const SizedBox(width: 16,),
+                                            Expanded(
+                                              child: Container(
+                                                color: Colors.transparent,
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Text(name, style: const TextStyle(fontSize: 16),),
+                                                    const SizedBox(height: 6,),
+                                                    Text("$city, $country ",style: TextStyle(fontSize: 13,color: Colors.grey.shade600, fontWeight: FontWeight.normal),),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      FutureBuilder<Map<String, dynamic>>(
+                                        future: clientData,
+                                        builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotClient) {
+                                          if (snapshotClient.hasData) {
+                                            return Container(
+                                              color: Colors.white,
+                                              child: Column(
+                                                  children: <Widget> [
+                                                    Expanded(
+                                                      child: CircleAvatar(
+                                                        backgroundImage: NetworkImage(snapshotClient.data!["avatar"]),
+                                                      ),
+                                                    ),
+                                                    Expanded(
+                                                      child: Text(
+                                                        snapshotClient.data!["name"],
+                                                      ),
+                                                    ),
+                                                  ]
+                                              ),
+                                            );
+                                          } else if (snapshotClient.hasError) {
+                                            return const Center(
+                                              child: Text('Error'),
+                                            );
+                                          } else {
+                                            return Center(
+                                              child: Column(
+                                                children: const [
+                                                  SizedBox(
+                                                    width: 60,
+                                                    height: 60,
+                                                    child: CircularProgressIndicator(),
+                                                  ),
+                                                  Padding(
+                                                    padding: EdgeInsets.only(top: 16),
+                                                    child: Text('Awaiting result...'),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            } else if (snapshotTour.hasError) {
+                              return const Center(
+                                child: Text('Error'),
+                              );
+                            } else {
+                              return Center(
+                                child: Column(
+                                  children: const [
+                                    SizedBox(
+                                      width: 60,
+                                      height: 60,
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.only(top: 16),
+                                      child: Text('Awaiting result...'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          },
+                        );
+                      } else if (snapshotUser.hasError) {
+                        return const Center(
+                          child: Text('Error'),
+                        );
+                      } else {
+                        return Center(
+                          child: Column(
+                            children: const [
+                              SizedBox(
+                                width: 60,
+                                height: 60,
+                                child: CircularProgressIndicator(),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(top: 16),
+                                child: Text('Awaiting result...'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
+              );
+            } else if (snapshotUser.hasError) {
+              return const Center(
+                child: Text('Error'),
+              );
+            } else {
+              return Center(
+                child: Column(
+                  children: const [
+                    SizedBox(
+                      width: 60,
+                      height: 60,
+                      child: CircularProgressIndicator(),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: Text('Awaiting result...'),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
+        )
     );
   }
 }

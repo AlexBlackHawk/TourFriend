@@ -4,15 +4,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'dart:io';
 
-class ProgramUser {
-  String name;
-  String email;
-  String photo;
-  String userID;
-  String providerID;
-  ProgramUser({required this.name, required this.email, required this.photo, required this.userID, required this.providerID});
-}
-
 class AuthenticationBackend{
   final authInstance = FirebaseAuth.instance;
   User? user;
@@ -54,16 +45,13 @@ class AuthenticationBackend{
     if (Platform.isAndroid || Platform.isIOS) {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-      // Obtain the auth details from the request
       final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
 
-      // Create a new credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth?.accessToken,
         idToken: googleAuth?.idToken,
       );
 
-      // Once signed in, return the UserCredential
       UserCredential uc = await authInstance.signInWithCredential(credential);
       return uc.user;
     }
@@ -75,7 +63,6 @@ class AuthenticationBackend{
         'login_hint': 'user@example.com'
       });
 
-      // Once signed in, return the UserCredential
       UserCredential uc = await authInstance.signInWithPopup(googleProvider);
       return uc.user;
     }
@@ -87,10 +74,8 @@ class AuthenticationBackend{
 
       dynamic accessToken = loginResult.accessToken?.token;
 
-      // Create a credential from the access token
       final OAuthCredential facebookAuthCredential = FacebookAuthProvider.credential(accessToken);
 
-      // Once signed in, return the UserCredential
       UserCredential uc = await authInstance.signInWithCredential(facebookAuthCredential);
       return uc.user;
     }
@@ -102,7 +87,6 @@ class AuthenticationBackend{
         'display': 'popup',
       });
 
-      // Once signed in, return the UserCredential
       UserCredential uc = await authInstance.signInWithPopup(facebookProvider);
       return uc.user;
     }
@@ -145,7 +129,6 @@ class AuthenticationBackend{
       return user!.providerData[0].displayName;
     }
     return null;
-    // List<UserInfo>? x = user?.providerData;
   }
 
   String? getUserEmail() {
@@ -176,9 +159,6 @@ class AuthenticationBackend{
     return null;
   }
 
-  ProgramUser makeUser() {
-    return ProgramUser(name: getUserName()!, email: getUserEmail()!, photo: getUserPhotoLink()!, userID: getUserID()!, providerID: getUserProviderID()!);
-  }
 
   Future<void> userSignOut() async {
     await authInstance.signOut();

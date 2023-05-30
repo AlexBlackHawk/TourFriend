@@ -19,14 +19,12 @@ class ChatList extends StatefulWidget {
 }
 
 class _ChatListState extends State<ChatList> {
-  Stream<QuerySnapshot>? chatRooms;
+  late Stream<QuerySnapshot> chatRooms;
 
   @override
   void initState() {
     super.initState();
-    setState(() {
-      chatRooms = widget.chat.getUserChats(widget.auth.user!.uid);
-    });
+    chatRooms = widget.chat.getUserChats(widget.auth.user!.uid);
   }
 
   String getTime (DateTime dateTime) {
@@ -41,41 +39,69 @@ class _ChatListState extends State<ChatList> {
           automaticallyImplyLeading: false,
         ),
         //backgroundColor: Colors[],
-        body: chatRooms != null ? Expanded(
-          child: Container(
-            margin: const EdgeInsets.only(top: 10, right: 5),
-            child: StreamBuilder(
-              stream: chatRooms,
-              builder: (context, snapshot) {
-                return snapshot.hasData
-                    ? ListView.builder(
-                        itemCount: snapshot.data!.docs.length,
-                        shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          return ChatListItem(
-                            auth: widget.auth,
-                            chat: widget.chat,
-                            storage: widget.storage,
-                            database: widget.database,
-                            users: snapshot.data!.docs[index]["users"],
-                            lastMessage: snapshot.data!.docs[index]["last message"],
-                            time: getTime(snapshot.data!.docs[index]["time"]),
-                            chatRoomID: snapshot.data!.docs[index].id,
-                          );
-                  },
-                )
-                    : Container();
+        body: StreamBuilder<QuerySnapshot>(
+          stream: chatRooms,
+          builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            if (snapshot.hasError) {
+              return const Text('Something went wrong');
+            }
+
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Text("Loading");
+            }
+
+            return ListView.builder(
+              itemCount: snapshot.data!.docs.length,
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                return ChatListItem(
+                  auth: widget.auth,
+                  chat: widget.chat,
+                  storage: widget.storage,
+                  database: widget.database,
+                  users: snapshot.data!.docs[index]["users"],
+                  lastMessage: snapshot.data!.docs[index]["last message"],
+                  time: getTime(snapshot.data!.docs[index]["time"]),
+                  chatRoomID: snapshot.data!.docs[index].id,
+                );
               },
-            ),
-            // child: ListView.builder(
-            //   itemCount: widget.data.length,
-            //   itemBuilder: ((context, index) {
-            //     return ChatListItem(chat: widget.data[index]);
-            //   }),
-            // ),
-          ),
+            );
+          },
         )
-            : Container(),
+        // Expanded(
+        //   child: Container(
+        //     margin: const EdgeInsets.only(top: 10, right: 5),
+        //     child: StreamBuilder(
+        //       stream: chatRooms,
+        //       builder: (context, snapshot) {
+        //         return snapshot.hasData
+        //             ? ListView.builder(
+        //                 itemCount: snapshot.data!.docs.length,
+        //                 shrinkWrap: true,
+        //                 itemBuilder: (context, index) {
+        //                   return ChatListItem(
+        //                     auth: widget.auth,
+        //                     chat: widget.chat,
+        //                     storage: widget.storage,
+        //                     database: widget.database,
+        //                     users: snapshot.data!.docs[index]["users"],
+        //                     lastMessage: snapshot.data!.docs[index]["last message"],
+        //                     time: getTime(snapshot.data!.docs[index]["time"]),
+        //                     chatRoomID: snapshot.data!.docs[index].id,
+        //                   );
+        //           },
+        //         )
+        //             : Container();
+        //       },
+        //     ),
+        //     // child: ListView.builder(
+        //     //   itemCount: widget.data.length,
+        //     //   itemBuilder: ((context, index) {
+        //     //     return ChatListItem(chat: widget.data[index]);
+        //     //   }),
+        //     // ),
+        //   ),
+        // ),
       // SingleChildScrollView(
       //   physics: const BouncingScrollPhysics(),
       //   child: Column(

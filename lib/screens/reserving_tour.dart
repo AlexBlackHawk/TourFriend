@@ -23,7 +23,7 @@ class _ReservingTourState extends State<ReservingTour> {
   final departureCityController = TextEditingController();
   final dateFromController = TextEditingController();
   final dateToController = TextEditingController();
-  Map<String, dynamic>? tourInfo;
+  late Future<Map<String, dynamic>> tourInfo;
   String? selectedCurrency;
   int? nights;
   double? adults;
@@ -65,15 +65,7 @@ class _ReservingTourState extends State<ReservingTour> {
   @override
   void initState() {
     super.initState();
-    setState(() async {
-      tourInfo = await widget.database.getTourInfo(widget.tourID);
-      tourAgent = tourInfo!["tour agent"];
-      prices = {
-        "Гривні": tourInfo!["price UAH"],
-        "Долари": tourInfo!["price USD"],
-        "Євро": tourInfo!["price EUR"]
-      };
-    });
+    tourInfo = widget.database.getTourInfo(widget.tourID);
   }
 
   @override
@@ -90,389 +82,422 @@ class _ReservingTourState extends State<ReservingTour> {
     return Scaffold(
       appBar: getAppBar(context),
       backgroundColor: Colors.white,
-      body: tourInfo != null ? SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: <Widget>[
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Місто відправлення",
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color:Colors.black
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  TextField(
-                    keyboardType: TextInputType.name,
-                    textAlign: TextAlign.start,
-                    decoration: const InputDecoration(
-                      fillColor: Colors.white,
-                      filled: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.black,
-                        ),
-                      ),
-                      border: OutlineInputBorder(),
-                    ),
-                    cursorColor: Colors.black,
-                    controller: departureCityController,
-                  ),
-                  const SizedBox(
-                    height: 8.0,
-                  ),
-                ],
-              ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: tourInfo,
+        builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+          if (snapshot.hasData) {
+            tourAgent = snapshot.data!["tour agent"];
+            prices = {
+              "Гривні": snapshot.data!["price UAH"],
+              "Долари": snapshot.data!["price USD"],
+              "Євро": snapshot.data!["price EUR"]
+            };
 
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Виліт від",
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black87
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  TextField(
-                    onSubmitted: (String val) {
-                      setState(() {
-                        if (dateToController.text.isNotEmpty) {
-                          nights = daysBetween(dateFromController.text, dateToController.text);
-                        }
-                        if (selectedCurrency != null) {
-                          cost = nights! * prices![selectedCurrency!]!;
-                        }
-                      });
-                    },
-                    textAlign: TextAlign.start,
-                    decoration: const InputDecoration(
-                      fillColor: Colors.white,
-                      filled: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.black,
-                        ),
-                      ),
-                      border: OutlineInputBorder(),
-                    ),
-                    controller: dateFromController,
-                    readOnly: true,  //set it true, so that user will not able to edit text
-                    onTap: () async {
-                      DateTime? pickedDate = await showDatePicker(
-                          context: context, initialDate: DateTime.now(),
-                          firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
-                          lastDate: DateTime(2101)
-                      );
-
-                      if(pickedDate != null ){
-                        print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
-                        String formattedDate = intl.DateFormat('yyyy-MM-dd').format(pickedDate);
-                        print(formattedDate); //formatted date output using intl package =>  2021-03-16
-                        //you can implement different kind of Date Format here according to your requirement
-
-                        setState(() {
-                          dateFromController.text = formattedDate; //set output date to TextField value.
-                        });
-                      }else{
-                        print("Date is not selected");
-                      }
-                    },
-                  ),
-                  const SizedBox(
-                    height: 7.0,
-                  ),
-                ],
-              ),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "До",
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black87
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  TextField(
-                    onSubmitted: (String val) {
-                      setState(() {
-                        if (dateFromController.text.isNotEmpty) {
-                          nights = daysBetween(dateFromController.text, dateToController.text);
-                        }
-                        if (selectedCurrency != null) {
-                          cost = nights! * prices![selectedCurrency!]!;
-                        }
-                      });
-                    },
-                    textAlign: TextAlign.start,
-                    decoration: const InputDecoration(
-                      fillColor: Colors.white,
-                      filled: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.black,
-                        ),
-                      ),
-                      border: OutlineInputBorder(),
-                    ),
-                    controller: dateToController,
-                    readOnly: true,  //set it true, so that user will not able to edit text
-                    onTap: () async {
-                      DateTime? pickedDate = await showDatePicker(
-                          context: context, initialDate: DateTime.now(),
-                          firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
-                          lastDate: DateTime(2101)
-                      );
-
-                      if(pickedDate != null){
-                        print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
-                        String formattedDate = intl.DateFormat('yyyy-MM-dd').format(pickedDate);
-                        print(formattedDate); //formatted date output using intl package =>  2021-03-16
-                        //you can implement different kind of Date Format here according to your requirement
-
-                        setState(() {
-                          dateToController.text = formattedDate; //set output date to TextField value.
-                        });
-                      }else{
-                        print("Date is not selected");
-                      }
-                    },
-                  ),
-                  const SizedBox(
-                    height: 5.0,
-                  ),
-                ],
-              ),
-
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  nights != null ? "Ночей: $nights" : "Ночей: ",
-                  style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                      color:Colors.black
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Дорослих",
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black87
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  SpinBox(
-                    decoration: const InputDecoration(
-                      fillColor: Colors.white,
-                      filled: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.black,
-                        ),
-                      ),
-                      border: OutlineInputBorder(),
-                    ),
-                    min: 1,
-                    max: 100,
-                    value: 1,
-                    // decoration: InputDecoration(labelText: 'Basic'),
-                    onChanged: (value) => adults = value,
-                  ),
-                  const SizedBox(
-                    height: 5.0,
-                  ),
-                ],
-              ),
-
-              // ----------------------
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Дітей",
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black87
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  SpinBox(
-                    decoration: const InputDecoration(
-                      fillColor: Colors.white,
-                      filled: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Colors.black,
-                        ),
-                      ),
-                      border: OutlineInputBorder(),
-                    ),
-                    min: 0,
-                    max: 100,
-                    value: 0,
-                    // decoration: InputDecoration(labelText: 'Basic'),
-                    onChanged: (value) => children = value,
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                ],
-              ),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Валюта",
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color:Colors.black
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  DropdownButtonFormField(
-                      decoration: const InputDecoration(
-                        fillColor: Colors.white,
-                        filled: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.black,
+            return SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  children: <Widget>[
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Місто відправлення",
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color:Colors.black
                           ),
                         ),
-                        border: OutlineInputBorder(),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        TextField(
+                          keyboardType: TextInputType.name,
+                          textAlign: TextAlign.start,
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          cursorColor: Colors.black,
+                          controller: departureCityController,
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                      ],
+                    ),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Виліт від",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        TextField(
+                          onSubmitted: (String val) {
+                            setState(() {
+                              if (dateToController.text.isNotEmpty) {
+                                nights = daysBetween(dateFromController.text, dateToController.text);
+                              }
+                              if (selectedCurrency != null) {
+                                cost = nights! * prices![selectedCurrency!]!;
+                              }
+                            });
+                          },
+                          textAlign: TextAlign.start,
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          controller: dateFromController,
+                          readOnly: true,  //set it true, so that user will not able to edit text
+                          onTap: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                                context: context, initialDate: DateTime.now(),
+                                firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
+                                lastDate: DateTime(2101)
+                            );
+
+                            if(pickedDate != null ){
+                              print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
+                              String formattedDate = intl.DateFormat('yyyy-MM-dd').format(pickedDate);
+                              print(formattedDate); //formatted date output using intl package =>  2021-03-16
+                              //you can implement different kind of Date Format here according to your requirement
+
+                              setState(() {
+                                dateFromController.text = formattedDate; //set output date to TextField value.
+                              });
+                            }else{
+                              print("Date is not selected");
+                            }
+                          },
+                        ),
+                        const SizedBox(
+                          height: 7.0,
+                        ),
+                      ],
+                    ),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "До",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        TextField(
+                          onSubmitted: (String val) {
+                            setState(() {
+                              if (dateFromController.text.isNotEmpty) {
+                                nights = daysBetween(dateFromController.text, dateToController.text);
+                              }
+                              if (selectedCurrency != null) {
+                                cost = nights! * prices![selectedCurrency!]!;
+                              }
+                            });
+                          },
+                          textAlign: TextAlign.start,
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          controller: dateToController,
+                          readOnly: true,  //set it true, so that user will not able to edit text
+                          onTap: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                                context: context, initialDate: DateTime.now(),
+                                firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
+                                lastDate: DateTime(2101)
+                            );
+
+                            if(pickedDate != null){
+                              print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
+                              String formattedDate = intl.DateFormat('yyyy-MM-dd').format(pickedDate);
+                              print(formattedDate); //formatted date output using intl package =>  2021-03-16
+                              //you can implement different kind of Date Format here according to your requirement
+
+                              setState(() {
+                                dateToController.text = formattedDate; //set output date to TextField value.
+                              });
+                            }else{
+                              print("Date is not selected");
+                            }
+                          },
+                        ),
+                        const SizedBox(
+                          height: 5.0,
+                        ),
+                      ],
+                    ),
+
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        nights != null ? "Ночей: $nights" : "Ночей: ",
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color:Colors.black
+                        ),
                       ),
-                      validator: (value) => value == null ? "Оберіть валюту" : null,
-                      dropdownColor: Colors.white,
-                      value: selectedCurrency,
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedCurrency = newValue!;
-                          if (nights != null) {
-                            cost = nights! * prices![selectedCurrency!]!;
-                          }
-                        });
-                      },
-                      items: currenciesDropdown()
+                    ),
+                    const SizedBox(
+                      height: 5,
+                    ),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Дорослих",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        SpinBox(
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          min: 1,
+                          max: 100,
+                          value: 1,
+                          // decoration: InputDecoration(labelText: 'Basic'),
+                          onChanged: (value) => adults = value,
+                        ),
+                        const SizedBox(
+                          height: 5.0,
+                        ),
+                      ],
+                    ),
+
+                    // ----------------------
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Дітей",
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black87
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        SpinBox(
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.black,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          min: 0,
+                          max: 100,
+                          value: 0,
+                          // decoration: InputDecoration(labelText: 'Basic'),
+                          onChanged: (value) => children = value,
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                      ],
+                    ),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Валюта",
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color:Colors.black
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        DropdownButtonFormField(
+                            decoration: const InputDecoration(
+                              fillColor: Colors.white,
+                              filled: true,
+                              contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.black,
+                                ),
+                              ),
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) => value == null ? "Оберіть валюту" : null,
+                            dropdownColor: Colors.white,
+                            value: selectedCurrency,
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedCurrency = newValue!;
+                                if (nights != null) {
+                                  cost = nights! * prices![selectedCurrency!]!;
+                                }
+                              });
+                            },
+                            items: currenciesDropdown()
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                      ],
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        cost != null ? "Вартість: $cost" : "Вартість: ",
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color:Colors.black
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                    SizedBox(
+                      height: 45,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                          onPressed: () async {
+
+                            String userID = widget.auth.user!.uid;
+                            String tourID = widget.tourID;
+
+                            Map<String, dynamic> reserveParameters = <String, dynamic>{
+                              "client": widget.database.db.doc("Users/$userID"),
+                              "tour agent": snapshot.data!["tour agent"],
+                              "city": departureCityController.text,
+                              "from": dateFromController.text,
+                              "to": dateToController.text,
+                              "nights": nights,
+                              "adults": adults,
+                              "children": children,
+                              "currency": selectedCurrency,
+                              "cost": cost,
+                              "tour": widget.database.db.doc("Tours/$tourID"),
+                              "status": "Не підтверджено",
+                            };
+                            String newID = await widget.database.addNewDocument("Reservations", reserveParameters);
+                            DocumentReference docRef = widget.database.db.doc("Reservations/$newID");
+                            widget.database.updateDocumentData("Users", widget.auth.user!.uid, {"ordered tours": FieldValue.arrayUnion([docRef])});
+                            widget.database.updateDocumentData("Users", tourAgent!.id, {"ordered tours": FieldValue.arrayUnion([docRef])});
+
+                            const snackBar = SnackBar(
+                              content: Text('Заявку створено. Очікуйте підтвердження від туристичного агента'),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                          },
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orangeAccent,
+                              // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              textStyle: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'ЗАБРОНЮВАТИ',
+                            style: TextStyle(color: Colors.white),
+                          )
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return const Center(
+              child: Text('Error'),
+            );
+          } else {
+            return Center(
+              child: Column(
+                children: const [
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircularProgressIndicator(),
                   ),
-                  const SizedBox(
-                    height: 5,
+                  Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: Text('Awaiting result...'),
                   ),
                 ],
               ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  cost != null ? "Вартість: $cost" : "Вартість: ",
-                  style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                      color:Colors.black
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              SizedBox(
-                height: 45,
-                width: double.infinity,
-                child: ElevatedButton(
-                    onPressed: () async {
-
-                      String userID = widget.auth.user!.uid;
-                      String tourID = widget.tourID;
-
-                      Map<String, dynamic> reserveParameters = <String, dynamic>{
-                        "client": widget.database.db.doc("Users/$userID"),
-                        "tour agent": tourInfo!["tour agent"],
-                        "city": departureCityController.text,
-                        "from": dateFromController.text,
-                        "to": dateToController.text,
-                        "nights": nights,
-                        "adults": adults,
-                        "children": children,
-                        "currency": selectedCurrency,
-                        "cost": cost,
-                        "tour": widget.database.db.doc("Tours/$tourID"),
-                        "status": "Не підтверджено",
-                      };
-                      String newID = await widget.database.addNewDocument("Reservations", reserveParameters);
-                      DocumentReference docRef = widget.database.db.doc("Reservations/$newID");
-                      widget.database.updateDocumentData("Users", widget.auth.user!.uid, {"ordered tours": FieldValue.arrayUnion([docRef])});
-                      widget.database.updateDocumentData("Users", tourAgent!.id, {"ordered tours": FieldValue.arrayUnion([docRef])});
-
-                      const snackBar = SnackBar(
-                        content: Text('Заявку створено. Очікуйте підтвердження від туристичного агента'),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                    },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent,
-                        // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30.0),
-                        ),
-                        textStyle: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold)),
-                    child: const Text(
-                      'ЗАБРОНЮВАТИ',
-                      style: TextStyle(color: Colors.white),
-                    )
-                ),
-              ),
-            ],
-          ),
-        ),
+            );
+          }
+        },
       )
-      : Container(),
     );
   }
 
