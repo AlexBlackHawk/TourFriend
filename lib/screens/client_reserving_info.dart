@@ -100,25 +100,9 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                                       child: Text(snapshot.data!["name"], style: const TextStyle(fontSize: 15.0),),
                                     );
                                   } else if (snapshot.hasError) {
-                                    return const Center(
-                                      child: Text('Error'),
-                                    );
+                                    return const Text('Error');
                                   } else {
-                                    return Center(
-                                      child: Column(
-                                        children: const [
-                                          SizedBox(
-                                            width: 60,
-                                            height: 60,
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                          Padding(
-                                            padding: EdgeInsets.only(top: 16),
-                                            child: Text('Awaiting result...'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                    return const CircularProgressIndicator();
                                   }
                                 },
                               ),
@@ -145,25 +129,9 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                                       child: Text(snapshot.data!["name"], style: const TextStyle(fontSize: 15.0),),
                                     );
                                   } else if (snapshot.hasError) {
-                                    return const Center(
-                                      child: Text('Error'),
-                                    );
+                                    return const Text('Error');
                                   } else {
-                                    return Center(
-                                      child: Column(
-                                        children: const [
-                                          SizedBox(
-                                            width: 60,
-                                            height: 60,
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                          Padding(
-                                            padding: EdgeInsets.only(top: 16),
-                                            child: Text('Awaiting result...'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                    return const CircularProgressIndicator();
                                   }
                                 },
                               ),
@@ -190,25 +158,9 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                                       child: Text(snapshot.data!["email"], style: const TextStyle(fontSize: 15.0),),
                                     );
                                   } else if (snapshot.hasError) {
-                                    return const Center(
-                                      child: Text('Error'),
-                                    );
+                                    return const Text('Error');
                                   } else {
-                                    return Center(
-                                      child: Column(
-                                        children: const [
-                                          SizedBox(
-                                            width: 60,
-                                            height: 60,
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                          Padding(
-                                            padding: EdgeInsets.only(top: 16),
-                                            child: Text('Awaiting result...'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                    return const CircularProgressIndicator();
                                   }
                                 },
                               ),

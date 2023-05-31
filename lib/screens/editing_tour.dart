@@ -325,7 +325,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("ghbjlmk"),
+          title: const Text("Редагування туру"),
         ),
         backgroundColor: Colors.grey.shade300,
       body: FutureBuilder<Map<String, dynamic>>(

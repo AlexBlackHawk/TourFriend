@@ -191,25 +191,27 @@ class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
                                               ),
                                             );
                                           } else if (snapshotClient.hasError) {
-                                            return const Center(
-                                              child: Text('Error'),
-                                            );
+                                            return const Text('Error');
+                                            // return const Center(
+                                            //   child: Text('Error'),
+                                            // );
                                           } else {
-                                            return Center(
-                                              child: Column(
-                                                children: const [
-                                                  SizedBox(
-                                                    width: 60,
-                                                    height: 60,
-                                                    child: CircularProgressIndicator(),
-                                                  ),
-                                                  Padding(
-                                                    padding: EdgeInsets.only(top: 16),
-                                                    child: Text('Awaiting result...'),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
+                                            return const CircularProgressIndicator();
+                                            // return Center(
+                                            //   child: Column(
+                                            //     children: const [
+                                            //       SizedBox(
+                                            //         width: 60,
+                                            //         height: 60,
+                                            //         child: CircularProgressIndicator(),
+                                            //       ),
+                                            //       Padding(
+                                            //         padding: EdgeInsets.only(top: 16),
+                                            //         child: Text('Awaiting result...'),
+                                            //       ),
+                                            //     ],
+                                            //   ),
+                                            // );
                                           }
                                         },
                                       ),
@@ -218,25 +220,24 @@ class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
                                 ),
                               );
                             } else if (snapshotTour.hasError) {
-                              return const Center(
-                                child: Text('Error'),
-                              );
+                              return const Text('Error');
                             } else {
-                              return Center(
-                                child: Column(
-                                  children: const [
-                                    SizedBox(
-                                      width: 60,
-                                      height: 60,
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.only(top: 16),
-                                      child: Text('Awaiting result...'),
-                                    ),
-                                  ],
-                                ),
-                              );
+                              return const CircularProgressIndicator();
+                              // return Center(
+                              //   child: Column(
+                              //     children: const [
+                              //       SizedBox(
+                              //         width: 60,
+                              //         height: 60,
+                              //         child: CircularProgressIndicator(),
+                              //       ),
+                              //       Padding(
+                              //         padding: EdgeInsets.only(top: 16),
+                              //         child: Text('Awaiting result...'),
+                              //       ),
+                              //     ],
+                              //   ),
+                              // );
                             }
                           },
                         );
@@ -341,8 +342,6 @@ class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
 //     );
 //   },
 // );
-
-
 
 
 

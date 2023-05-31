@@ -127,25 +127,9 @@ class _ToursAddedAgentState extends State<ToursAddedAgent> {
                           },
                         );
                       } else if (snapshotTour.hasError) {
-                        return const Center(
-                          child: Text('Error'),
-                        );
+                        return const Text('Error');
                       } else {
-                        return Center(
-                          child: Column(
-                            children: const [
-                              SizedBox(
-                                width: 60,
-                                height: 60,
-                                child: CircularProgressIndicator(),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(top: 16),
-                                child: Text('Awaiting result...'),
-                              ),
-                            ],
-                          ),
-                        );
+                        return const CircularProgressIndicator();
                       }
                     },
                   );
