@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'change_account_data_client.dart';
@@ -40,6 +41,8 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
   String? email;
   String? sex;
   String? photo;
+  Timestamp? birthdayTS;
+  DateTime? birthdayDate;
 
   Sex getSexOption(String sex) {
     if (sex == "Чоловіча") {
@@ -64,22 +67,42 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
     emailController.dispose();
     super.dispose();
   }
-
+// automaticallyImplyLeading: false,
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("ghbjlmk"),
-        automaticallyImplyLeading: false,
-      ),
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: const Text("Аккаунт"),
+          automaticallyImplyLeading: false,
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartScreen();
+                    },
+                  ),
+                );
+                widget.auth.userSignOut();
+              },
+              icon: const Icon(Icons.logout),
+              tooltip: "Вийти",
+            )
+          ],
+        ),
       backgroundColor: Colors.grey.shade300,
       body: FutureBuilder<Map<String, dynamic>>(
         future: userInfo,
         builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
           if (snapshot.hasData) {
-            photo = snapshot.data!["photo"];
+            photo = snapshot.data!["avatar"];
             name = snapshot.data!["name"];
-            birthday = snapshot.data!["birthday"];
+            birthdayTS = snapshot.data!["birthday"];
+            birthdayDate = birthdayTS!.toDate();
+            birthday = intl.DateFormat('dd-MM-yyyy').format(birthdayDate!);
             phone = snapshot.data!["phone"];
             email = snapshot.data!["email"];
             sex = snapshot.data!["sex"];
@@ -172,7 +195,7 @@ class _AccountInformationClientState extends State<AccountInformationClient> {
                           onTap: () async {
                             DateTime? pickedDate = await showDatePicker(
                                 context: context, initialDate: DateTime.now(),
-                                firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
+                                firstDate: DateTime(1900), //DateTime.now() - not to allow to choose before today.
                                 lastDate: DateTime(2101)
                             );
 

@@ -107,7 +107,6 @@ class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: getAppBar(context),
       backgroundColor: Colors.white,
         body: FutureBuilder<Map<String, dynamic>>(
           future: userInfo,
@@ -159,9 +158,13 @@ class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
                                                 child: Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: <Widget>[
-                                                    Text(name, style: const TextStyle(fontSize: 16),),
+                                                    Expanded(
+                                                      child: Text(name, style: const TextStyle(fontSize: 16),),
+                                                    ),
                                                     const SizedBox(height: 6,),
-                                                    Text("$city, $country ",style: TextStyle(fontSize: 13,color: Colors.grey.shade600, fontWeight: FontWeight.normal),),
+                                                    Expanded(
+                                                      child: Text("$city, $country ",style: TextStyle(fontSize: 13,color: Colors.grey.shade600, fontWeight: FontWeight.normal),),
+                                                    ),
                                                   ],
                                                 ),
                                               ),

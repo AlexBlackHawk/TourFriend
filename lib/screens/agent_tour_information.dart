@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 import 'editing_tour.dart';
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
@@ -25,7 +26,7 @@ class AgentTourInformation extends StatefulWidget {
 class _AgentTourInformationState extends State<AgentTourInformation> with TickerProviderStateMixin {
   late Future<Map<String, dynamic>> tourInfo;
   List<Widget>? photosWidgets;
-  List<String>? photos;
+  List<dynamic>? photos;
   String? name;
   String? country;
   String? city;
@@ -35,11 +36,10 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
   int? priceUSD;
   int? priceEUR;
   String? aboutTour;
-  String? generalInformation;
   // String? tourInformation;
-  Map<String, String>? servicesDescriptions;
-  Map<String, String>? roomsDescriptions;
-  Map<String, dynamic>? tourAgentInfo;
+  Map<String, dynamic>? servicesDescriptions;
+  Map<String, dynamic>? roomsDescriptions;
+  // Map<String, dynamic>? tourAgentInfo;
 
   late TabController _servicesTabController;
   late TabController _roomsTabController;
@@ -104,7 +104,7 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
     }
   }
 
-  List<Widget> imageSliders(List<String> photos) {
+  List<Widget> imageSliders(List<dynamic> photos) {
     return photos.map((item) => Container(
       margin: const EdgeInsets.all(5.0),
       child: ClipRRect(
@@ -126,7 +126,7 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
     return tabs;
   }
 
-  List<Text> getTabsTexts(Iterable<String> tabsTexts) {
+  List<Text> getTabsTexts(Iterable<dynamic> tabsTexts) {
     List<Text> tabs = <Text>[];
     for (var element in tabsTexts) {
       tabs.add(Text(element,));
@@ -252,9 +252,27 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("ghbjlmk"),
-      ),
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: const Text("Інформація про тур"),
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartScreen();
+                    },
+                  ),
+                );
+                widget.auth.userSignOut();
+              },
+              icon: const Icon(Icons.logout),
+              tooltip: "Вийти",
+            )
+          ],
+        ),
       backgroundColor: Colors.grey.shade300,
       body: FutureBuilder<Map<String, dynamic>>(
         future: tourInfo,
@@ -266,12 +284,11 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
               country = snapshot.data!["country"];
               city = snapshot.data!["city"];
               stars = snapshot.data!["stars"];
-              serviceType = snapshot.data!["service type"];
+              serviceType = snapshot.data!["food"];
               priceUAH = snapshot.data!["price UAH"];
               priceUSD = snapshot.data!["price USD"];
               priceEUR = snapshot.data!["price EUR"];
               aboutTour = snapshot.data!["tour information"];
-              generalInformation = snapshot.data!["general information"];
               // tourInformation = tourInfo![""];
               servicesDescriptions = snapshot.data!["services"];
               roomsDescriptions = snapshot.data!["rooms"];
@@ -325,9 +342,6 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
                         )
                       ],
                     ), // About tour
-                    Text(
-                      generalInformation!,
-                    ),// General information
                     Column(
                       children: [
                         const Text(
@@ -548,6 +562,9 @@ class _AgentTourInformationState extends State<AgentTourInformation> with Ticker
                             style: TextStyle(color: Colors.white),
                           )
                       ),
+                    ),
+                    const SizedBox(
+                      height: 10,
                     ),
                     SizedBox(
                       height: 45,

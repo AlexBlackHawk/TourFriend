@@ -97,7 +97,6 @@ class _WishListState extends State<WishList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: getAppBar(context),
       backgroundColor: Colors.white,
         body: FutureBuilder<Map<String, dynamic>>(
           future: userInfo,
@@ -119,17 +118,21 @@ class _WishListState extends State<WishList> {
 
                         return ListTile(
                           leading: Image(image: NetworkImage(photo),),
-                          title: Text(name),
+                          title: Expanded(
+                            child: Text(name),
+                          ),
                           subtitle: Row(
                             children: <Widget>[
                               const Icon(
                                 Icons.place,
                                 color: Colors.black,
                               ),
-                              Text(
-                                "$city, $country",
-                                style: const TextStyle(
-                                  color: Colors.black,
+                              Expanded(
+                                child: Text(
+                                  "$city, $country",
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                             ],

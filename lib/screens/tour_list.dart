@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 import 'client_tour_information.dart';
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
@@ -32,8 +33,26 @@ class _TourListState extends State<TourList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Всі тури"),
+        leading: const BackButton(),
+        title: const Text("Тури"),
         automaticallyImplyLeading: false,
+        actions: <Widget>[
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const StartScreen();
+                  },
+                ),
+              );
+              widget.auth.userSignOut();
+            },
+            icon: const Icon(Icons.logout),
+            tooltip: "Вийти",
+          )
+        ],
       ),
       backgroundColor: Colors.white,
       body: StreamBuilder<QuerySnapshot>(
@@ -60,17 +79,21 @@ class _TourListState extends State<TourList> {
 
               return ListTile(
                 leading: Image(image: NetworkImage(photo),),
-                title: Text(name),
+                title: Expanded(
+                  child: Text(name),
+                ),
                 subtitle: Row(
                   children: <Widget>[
                     const Icon(
                       Icons.place,
                       color: Colors.black,
                     ),
-                    Text(
-                      "$city, $country",
-                      style: const TextStyle(
-                        color: Colors.black,
+                    Expanded(
+                      child: Text(
+                        "$city, $country",
+                        style: const TextStyle(
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                   ],

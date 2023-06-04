@@ -5,6 +5,7 @@ import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 import 'chat.dart';
 
 class TourAgentReservingInfo extends StatefulWidget {
@@ -57,10 +58,27 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Інформація про бронювання"),
-        backgroundColor: Colors.blue,
-      ),
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: const Text("Бронювання"),
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartScreen();
+                    },
+                  ),
+                );
+                widget.auth.userSignOut();
+              },
+              icon: const Icon(Icons.logout),
+              tooltip: "Вийти",
+            )
+          ],
+        ),
       backgroundColor: Colors.white,
         body: FutureBuilder<Map<String, dynamic>>(
           future: reservingInfo,
@@ -390,13 +408,13 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
                           height: 45,
                           width: double.infinity,
                           child: ElevatedButton(
-                              onPressed: () {
+                              onPressed: status == "Не підтверджено" ? () {
                                 widget.database.updateDocumentData("Reservings", widget.reservingID, {"status": "Підтверджено"});
                                 const snackBar = SnackBar(
                                   content: Text('Резервування підтверджено'),
                                 );
                                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                              },
+                              } : null,
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.orangeAccent,
                                   // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),

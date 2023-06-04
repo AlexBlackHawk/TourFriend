@@ -7,6 +7,7 @@ import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 
 enum HotelStar { one, two, three, four, five }
 enum HotelService { allInclude, breakfast, breakfastDinnerLunch, noFood, ultraAllInclude }
@@ -51,11 +52,10 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   int? priceUSD;
   int? priceEUR;
   String? aboutTour;
-  String? generalInformation;
   // String? tourInformation;
-  Map<String, String>? servicesDescriptions;
-  Map<String, String>? roomsDescriptions;
-  late Future<Map<String, dynamic>> tourAgentInfo;
+  Map<String, dynamic>? servicesDescriptions;
+  Map<String, dynamic>? roomsDescriptions;
+  // late Future<Map<String, dynamic>> tourAgentInfo;
 
   List<String> deletedPhotos = <String>[];
   Map<String, File> updatedPhotos = <String, File>{};
@@ -130,11 +130,12 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   }
 
   final nameController = TextEditingController();
+  final countryController = TextEditingController();
+  final cityController = TextEditingController();
   final priceUAHController = TextEditingController();
   final priceUSDController = TextEditingController();
   final priceEURController = TextEditingController();
   final descriptionController = TextEditingController();
-  final generalInfoController = TextEditingController();
   final servicesController = TextEditingController();
   final servicesNameController = TextEditingController();
   final roomNameController = TextEditingController();
@@ -167,11 +168,72 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
     });
   }
 
+  void addServiceTab(String tabName) { // String roomName
+    // Tab roomTab = const Tab(text: 'Address');
+    // String serviceTabName = servicesNameController.text;
+    servicesTabsName.add(tabName);
+    servicesTabs.add(Tab(text: tabName));
+  }
+
+  void addServiceTabBarView(String tabContent) {
+    TextEditingController newServicesController = TextEditingController(text: tabContent);
+    servicesDescriptionControllers.add(newServicesController);
+    servicesTabsViews.add(
+        TextFormField(
+          keyboardType: TextInputType.name,
+          textAlign: TextAlign.start,
+          decoration: const InputDecoration(
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.white,
+              ),
+            ),
+            border: OutlineInputBorder(),
+          ),
+          cursorColor: Colors.black,
+          controller: newServicesController,
+        )
+    );
+  }
+
   void makeRoomTabs() {
     roomsDescriptions!.forEach((key, value) {
       addRoomTab(key);
       addRoomTabBarView(value);
     });
+  }
+
+  void addRoomTab(String tabName) { // String roomName
+    // Tab roomTab = const Tab(text: 'Address');
+    roomsTabsName.add(tabName);
+    roomsTabs.add(Tab(text: tabName));
+  }
+
+  void addRoomTabBarView(String tabContent) {
+    TextEditingController newRoomController = TextEditingController(text: tabContent);
+    roomsDescriptionControllers.add(newRoomController);
+    roomsTabsViews.add(
+        TextFormField(
+          keyboardType: TextInputType.name,
+          textAlign: TextAlign.start,
+          decoration: const InputDecoration(
+            fillColor: Colors.white,
+            filled: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.white,
+              ),
+            ),
+            border: OutlineInputBorder(),
+          ),
+          cursorColor: Colors.black,
+          controller: newRoomController,
+        )
+    );
   }
 
   _getFromGallery() async {
@@ -220,11 +282,12 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   void dispose() {
     // Clean up the controller when the widget is disposed.
     nameController.dispose();
+    countryController.dispose();
+    cityController.dispose();
     priceUAHController.dispose();
     priceUSDController.dispose();
     priceEURController.dispose();
     descriptionController.dispose();
-    generalInfoController.dispose();
     servicesController.dispose();
     servicesNameController.dispose();
     roomNameController.dispose();
@@ -325,7 +388,25 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          leading: const BackButton(),
           title: const Text("Редагування туру"),
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartScreen();
+                    },
+                  ),
+                );
+                widget.auth.userSignOut();
+              },
+              icon: const Icon(Icons.logout),
+              tooltip: "Вийти",
+            )
+          ],
         ),
         backgroundColor: Colors.grey.shade300,
       body: FutureBuilder<Map<String, dynamic>>(
@@ -338,21 +419,28 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
             country = snapshot.data!["country"];
             city = snapshot.data!["city"];
             stars = snapshot.data!["stars"];
-            serviceType = snapshot.data!["service type"];
+            serviceType = snapshot.data!["food"];
             priceUAH = snapshot.data!["price UAH"];
             priceUSD = snapshot.data!["price USD"];
             priceEUR = snapshot.data!["price EUR"];
-            aboutTour = snapshot.data!["about tour"];
-            generalInformation = snapshot.data!["general information"];
+            aboutTour = snapshot.data!["tour information"];
             // tourInformation = tourInfo!["tour information"];
-            servicesDescriptions = snapshot.data!["services descriptions"];
-            roomsDescriptions = snapshot.data!["rooms descriptions"];
+            servicesDescriptions = snapshot.data!["services"];
+            roomsDescriptions = snapshot.data!["rooms"];
             _starsOption = getStarOption(stars!);
             _serviceOption = getServiceOption(serviceType!);
-            _servicesTabController = TabController(vsync: this, length: servicesTabs.length);
-            _roomsTabController = TabController(vsync: this, length: roomsTabs.length);
+            _servicesTabController = TabController(vsync: this, length: servicesDescriptions!.length);
+            _roomsTabController = TabController(vsync: this, length: roomsDescriptions!.length);
             makeServiceTabs();
             makeRoomTabs();
+
+            nameController.text = name!;
+            countryController.text = country!;
+            cityController.text = city!;
+            priceUAHController.text = priceUAH!.toString();
+            priceUSDController.text = priceUSD!.toString();
+            priceEURController.text = priceEUR!.toString();
+            descriptionController.text = aboutTour!;
 
             return SingleChildScrollView(
               scrollDirection: Axis.vertical,
@@ -415,7 +503,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                         ),
                         TextFormField(
                           keyboardType: TextInputType.name,
-                          initialValue: name,
                           textAlign: TextAlign.start,
                           decoration: const InputDecoration(
                             fillColor: Colors.white,
@@ -436,6 +523,85 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                         ),
                       ],
                     ),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Країна",
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color:Colors.black
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        TextFormField(
+                          keyboardType: TextInputType.name,
+                          textAlign: TextAlign.start,
+                          // minLines: null,
+                          maxLines: null,
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.white,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          cursorColor: Colors.black,
+                          controller: countryController,
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                      ],
+                    ),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Місто",
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color:Colors.black
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        TextFormField(
+                          keyboardType: TextInputType.name,
+                          textAlign: TextAlign.start,
+                          // minLines: null,
+                          maxLines: null,
+                          decoration: const InputDecoration(
+                            fillColor: Colors.white,
+                            filled: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Colors.white,
+                              ),
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          cursorColor: Colors.black,
+                          controller: cityController,
+                        ),
+                        const SizedBox(
+                          height: 8.0,
+                        ),
+                      ],
+                    ),
+
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -470,7 +636,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                                   ),
                                   TextFormField(
                                     keyboardType: TextInputType.number,
-                                    initialValue: priceUAH.toString(),
                                     textAlign: TextAlign.start,
                                     decoration: const InputDecoration(
                                       fillColor: Colors.white,
@@ -512,7 +677,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                                   ),
                                   TextFormField(
                                     keyboardType: TextInputType.number,
-                                    initialValue: priceUSD.toString(),
                                     textAlign: TextAlign.start,
                                     decoration: const InputDecoration(
                                       fillColor: Colors.white,
@@ -554,7 +718,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                                   ),
                                   TextFormField(
                                     keyboardType: TextInputType.number,
-                                    initialValue: priceEUR.toString(),
                                     textAlign: TextAlign.start,
                                     decoration: const InputDecoration(
                                       fillColor: Colors.white,
@@ -599,7 +762,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                         ),
                         TextFormField(
                           keyboardType: TextInputType.name,
-                          initialValue: aboutTour,
                           textAlign: TextAlign.start,
                           // minLines: null,
                           maxLines: null,
@@ -616,46 +778,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                           ),
                           cursorColor: Colors.black,
                           controller: descriptionController,
-                        ),
-                        const SizedBox(
-                          height: 8.0,
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Загальна інформація",
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
-                              color:Colors.black
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 5,
-                        ),
-                        TextFormField(
-                          keyboardType: TextInputType.name,
-                          initialValue: generalInformation,
-                          textAlign: TextAlign.start,
-                          // expands: true,
-                          // minLines: null,
-                          maxLines: null,
-                          decoration: const InputDecoration(
-                            fillColor: Colors.white,
-                            filled: true,
-                            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                              ),
-                            ),
-                            border: OutlineInputBorder(),
-                          ),
-                          cursorColor: Colors.black,
-                          controller: generalInfoController,
                         ),
                         const SizedBox(
                           height: 8.0,
@@ -710,7 +832,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                           ),
                         ]
                     ),
-
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -757,9 +878,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(
-                      height: 2.0,
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -898,9 +1016,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                         )
                       ],
                     ),
-                    const SizedBox(
-                      height: 10.0,
-                    ),
                     // tour characteristics
                     SizedBox(
                       height: 45,
@@ -919,11 +1034,12 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
                             Map<String, dynamic> tourInfo = <String, dynamic>{
                               "photos": photos,
                               "name": nameController.text,
-                              "price UAH": priceUAHController.text,
-                              "price USD": priceUSDController.text,
-                              "price EUR": priceEURController.text,
+                              "country": countryController.text,
+                              "city": cityController.text,
+                              "price UAH": double.parse(priceUAHController.text),
+                              "price USD": double.parse(priceUSDController.text),
+                              "price EUR": double.parse(priceEURController.text),
                               "tour information": descriptionController.text,
-                              "general information": generalInfoController.text,
                               "services": servicesDescription,
                               "rooms": roomsDescription,
                               "food": serviceString[_serviceOption],
@@ -1091,69 +1207,6 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   //     });
   //   }
   // }
-
-  void addRoomTab(String tabName) { // String roomName
-    // Tab roomTab = const Tab(text: 'Address');
-    roomsTabsName.add(tabName);
-    roomsTabs.add(Tab(text: tabName));
-  }
-
-  void addRoomTabBarView(String tabContent) {
-    TextEditingController newRoomController = TextEditingController();
-    roomsDescriptionControllers.add(newRoomController);
-    roomsTabsViews.add(
-        TextFormField(
-          keyboardType: TextInputType.name,
-          initialValue: tabContent,
-          textAlign: TextAlign.start,
-          decoration: const InputDecoration(
-            fillColor: Colors.white,
-            filled: true,
-            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: Colors.white,
-              ),
-            ),
-            border: OutlineInputBorder(),
-          ),
-          cursorColor: Colors.black,
-          controller: newRoomController,
-        )
-    );
-  }
-
-  void addServiceTab(String tabName) { // String roomName
-    // Tab roomTab = const Tab(text: 'Address');
-    // String serviceTabName = servicesNameController.text;
-    servicesTabsName.add(tabName);
-    servicesTabs.add(Tab(text: tabName));
-  }
-
-  void addServiceTabBarView(String tabContent) {
-    TextEditingController newServicesController = TextEditingController();
-    servicesDescriptionControllers.add(newServicesController);
-    servicesTabsViews.add(
-        TextFormField(
-          keyboardType: TextInputType.name,
-          initialValue: tabContent,
-          textAlign: TextAlign.start,
-          decoration: const InputDecoration(
-            fillColor: Colors.white,
-            filled: true,
-            contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: Colors.white,
-              ),
-            ),
-            border: OutlineInputBorder(),
-          ),
-          cursorColor: Colors.black,
-          controller: newServicesController,
-        )
-    );
-  }
 
   AppBar getAppBar(BuildContext context) {
     return AppBar(

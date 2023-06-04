@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'adding_tour.dart';
 import 'agent_tour_information.dart';
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
@@ -77,7 +76,6 @@ class _ToursAddedAgentState extends State<ToursAddedAgent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: getAppBar(context),
       backgroundColor: Colors.white,
         body: FutureBuilder<Map<String, dynamic>>(
           future: userInfo,
@@ -96,21 +94,25 @@ class _ToursAddedAgentState extends State<ToursAddedAgent> {
                         String city = snapshotTour.data!['city'];
                         String country = snapshotTour.data!['country'];
                         String name = snapshotTour.data!['name'];
-                        String photo = snapshotTour.data!['photo'][0];
+                        String photo = snapshotTour.data!['photos'][0];
 
                         return ListTile(
                           leading: Image(image: NetworkImage(photo),),
-                          title: Text(name),
+                          title: Expanded(
+                            child: Text(name),
+                          ),
                           subtitle: Row(
                             children: <Widget>[
                               const Icon(
                                 Icons.place,
                                 color: Colors.black,
                               ),
-                              Text(
-                                "$city, $country",
-                                style: const TextStyle(
-                                  color: Colors.black,
+                              Expanded(
+                                child: Text(
+                                  "$city, $country",
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
                             ],

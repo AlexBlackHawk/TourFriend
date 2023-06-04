@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 import 'chat.dart';
 import 'reserving_tour.dart';
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
@@ -37,7 +38,6 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
   int? priceUSD;
   int? priceEUR;
   String? aboutTour;
-  String? generalInformation;
   DocumentReference? tourAgent;
   // String? tourInformation;
   Map<String, dynamic>? servicesDescriptions;
@@ -262,7 +262,25 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Опис туру"),
+        leading: const BackButton(),
+        title: const Text("Інформація про тур"),
+        actions: <Widget>[
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const StartScreen();
+                  },
+                ),
+              );
+              widget.auth.userSignOut();
+            },
+            icon: const Icon(Icons.logout),
+            tooltip: "Вийти",
+          )
+        ],
       ),
       backgroundColor: Colors.grey.shade300,
       body: FutureBuilder<Map<String, dynamic>>(
@@ -274,13 +292,12 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
               name = snapshot.data!["name"];
               country = snapshot.data!["country"];
               city = snapshot.data!["city"];
-              stars = snapshot.data!["stars"].toString();
-              serviceType = snapshot.data!["food"].toString();
+              stars = snapshot.data!["stars"];
+              serviceType = snapshot.data!["food"];
               priceUAH = snapshot.data!["price UAH"];
               priceUSD = snapshot.data!["price USD"];
               priceEUR = snapshot.data!["price EUR"];
               aboutTour = snapshot.data!["tour information"];
-              generalInformation = snapshot.data!["general information"];
               tourAgent = snapshot.data!["tour agent"];
               servicesDescriptions = snapshot.data!["services"];
               roomsDescriptions = snapshot.data!["rooms"];
@@ -339,9 +356,6 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
                           )
                         ],
                       ), // About tour
-                      Text(
-                        generalInformation!,
-                      ),// General information
                       Column(
                         children: [
                           const Text(
@@ -608,6 +622,9 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
                         },
                       ),
                       // Container(),
+                      const SizedBox(
+                        height: 15,
+                      ),
                       SizedBox(
                         height: 45,
                         width: double.infinity,
@@ -625,9 +642,9 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.orangeAccent,
                                 // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30.0),
-                                ),
+                                // shape: RoundedRectangleBorder(
+                                //   borderRadius: BorderRadius.circular(30.0),
+                                // ),
                                 textStyle: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold)),

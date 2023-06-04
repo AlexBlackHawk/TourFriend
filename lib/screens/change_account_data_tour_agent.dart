@@ -8,6 +8,7 @@ import 'package:travel_agency_work_optimization/backend_database.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 
 enum Sex { male, female }
 
@@ -41,7 +42,7 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
   final confirmPasswordController = TextEditingController();
   late Future<Map<String, dynamic>> userInfo;
   String? name;
-  Timestamp? birthday;
+  String? birthday;
   String? phone;
   String? email;
   String? sex;
@@ -50,6 +51,9 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
   late Future<List<DropdownMenuItem<String>>> travelCompan;
 
   File? imageFile;
+
+  Timestamp? birthdayTS;
+  DateTime? birthdayDate;
 
   String? imagePath;
   DateTime? pickedDate;
@@ -98,22 +102,47 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("ghbjlmk"),
-      ),
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: const Text("Аккаунт"),
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartScreen();
+                    },
+                  ),
+                );
+                widget.auth.userSignOut();
+              },
+              icon: const Icon(Icons.logout),
+              tooltip: "Вийти",
+            )
+          ],
+        ),
       backgroundColor: Colors.grey.shade300,
       body: FutureBuilder<Map<String, dynamic>>(
         future: userInfo,
         builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
           if (snapshot.hasData) {
-            photo = snapshot.data!["photo"];
+            photo = snapshot.data!["avatar"];
             name = snapshot.data!["name"];
-            birthday = snapshot.data!["birthday"];
+            birthdayTS = snapshot.data!["birthday"];
+            birthdayDate = birthdayTS!.toDate();
+            birthday = intl.DateFormat('dd-MM-yyyy').format(birthdayDate!);
             phone = snapshot.data!["phone"];
             email = snapshot.data!["email"];
             sex = snapshot.data!["sex"];
             tourCompany = snapshot.data!["tour company"];
             _option = getSexOption(sex!);
+
+            nameController.text = name!;
+            birthdayController.text = birthday!;
+            phoneController.text = phone!;
+            emailController.text = email!;
 
             return SingleChildScrollView(
               scrollDirection: Axis.vertical,
@@ -152,7 +181,6 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                         TextFormField(
                           keyboardType: TextInputType.name,
                           textAlign: TextAlign.start,
-                          initialValue: name!,
                           decoration: const InputDecoration(
                             fillColor: Colors.white,
                             filled: true,
@@ -188,7 +216,6 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                         ),
                         TextFormField(
                           textAlign: TextAlign.start,
-                          initialValue: birthday != null ? intl.DateFormat('dd-MM-yyyy').format(birthday!.toDate()) : "",
                           decoration: const InputDecoration(
                             fillColor: Colors.white,
                             filled: true,
@@ -205,8 +232,8 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                           readOnly: true,  //set it true, so that user will not able to edit text
                           onTap: () async {
                             pickedDate = await showDatePicker(
-                                context: context, initialDate: birthday != null ? birthday!.toDate() : DateTime.now(),
-                                firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
+                                context: context, initialDate: birthday != null ? birthdayDate! : DateTime.now(),
+                                firstDate: DateTime(1900), //DateTime.now() - not to allow to choose before today.
                                 lastDate: DateTime(2101)
                             );
 
@@ -218,6 +245,7 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
 
                               setState(() {
                                 birthdayController.text = formattedDate; //set output date to TextField value.
+                                birthdayDate = pickedDate;
                               });
                             }else{
                               print("Date is not selected");
@@ -246,7 +274,6 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                         TextFormField(
                           keyboardType: TextInputType.phone,
                           textAlign: TextAlign.start,
-                          initialValue: phone!,
                           decoration: const InputDecoration(
                             fillColor: Colors.white,
                             filled: true,
@@ -283,7 +310,6 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                         TextFormField(
                           keyboardType: TextInputType.emailAddress,
                           textAlign: TextAlign.start,
-                          initialValue: email,
                           decoration: const InputDecoration(
                             fillColor: Colors.white,
                             filled: true,
@@ -533,10 +559,12 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
                               }
                               Map<String, dynamic> userData = <String, dynamic>{
                                 "avatar": imagePath,
-                                "birthday": pickedDate != null ? Timestamp.fromDate(pickedDate!) : null,
+                                "birthday": Timestamp.fromDate(birthdayDate!),
                                 "name": nameController.text,
                                 "sex": userSex,
                                 "email": emailController.text,
+                                "phone": phoneController.text,
+                                "tour company": tourCompany,
                               };
                               widget.auth.updateUserName(nameController.text);
                               widget.auth.updatePhoto(imagePath!);

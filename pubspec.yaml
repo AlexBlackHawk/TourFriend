@@ -38,7 +38,7 @@ dependencies:
   carousel_slider: ^4.2.1
   firebase_core: ^2.8.0
   firebase_auth: ^4.3.0
-  cloud_firestore: ^4.7.1
+  cloud_firestore: ^4.8.0
   firebase_storage: ^11.0.16
   google_sign_in: ^6.0.2
   flutter_secure_storage: ^8.0.0

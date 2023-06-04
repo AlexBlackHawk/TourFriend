@@ -7,6 +7,7 @@ import 'package:travel_agency_work_optimization/backend_database.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 
 enum HotelStar { one, two, three, four, five }
 enum HotelService { allInclude, breakfast, breakfastDinnerLunch, noFood, ultraAllInclude }
@@ -103,7 +104,6 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
   final priceUSDController = TextEditingController();
   final priceEURController = TextEditingController();
   final descriptionController = TextEditingController();
-  final generalInfoController = TextEditingController();
   final servicesNameController = TextEditingController();
   final servicesController = TextEditingController();
   final roomNameController = TextEditingController();
@@ -127,7 +127,6 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
     priceUSDController.dispose();
     priceEURController.dispose();
     descriptionController.dispose();
-    generalInfoController.dispose();
     servicesController.dispose();
     servicesNameController.dispose();
     roomNameController.dispose();
@@ -253,7 +252,25 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("ghbjlmk"),
+          leading: const BackButton(),
+          title: const Text("Додавання туру"),
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartScreen();
+                    },
+                  ),
+                );
+                widget.auth.userSignOut();
+              },
+              icon: const Icon(Icons.logout),
+              tooltip: "Вийти",
+            )
+          ],
         ),
         backgroundColor: Colors.grey.shade300,
         body: SingleChildScrollView(
@@ -521,45 +538,6 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Загальна інформація",
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          color:Colors.black
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    TextField(
-                      keyboardType: TextInputType.name,
-                      textAlign: TextAlign.start,
-                      // expands: true,
-                      // minLines: null,
-                      maxLines: null,
-                      decoration: const InputDecoration(
-                        fillColor: Colors.white,
-                        filled: true,
-                        contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.white,
-                          ),
-                        ),
-                        border: OutlineInputBorder(),
-                      ),
-                      cursorColor: Colors.black,
-                      controller: generalInfoController,
-                    ),
-                    const SizedBox(
-                      height: 8.0,
-                    ),
-                  ],
-                ),
 
                 Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -815,11 +793,10 @@ class _AddingTourState extends State<AddingTour> with TickerProviderStateMixin {
                         Map<String, dynamic> tourInfo = <String, dynamic>{
                           "photos": imgList,
                           "name": nameController.text,
-                          "price UAH": priceUAHController.text,
-                          "price USD": priceUSDController.text,
-                          "price EUR": priceEURController.text,
+                          "price UAH": double.parse(priceUAHController.text),
+                          "price USD": double.parse(priceUSDController.text),
+                          "price EUR": double.parse(priceEURController.text),
                           "tour information": descriptionController.text,
-                          "general information": generalInfoController.text,
                           "services": servicesDescription,
                           "rooms": roomsDescription,
                           "food": serviceString[_serviceOption],

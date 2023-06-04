@@ -170,7 +170,7 @@ class _SignUpClientState extends State<SignUpClient> {
                     onTap: () async {
                       pickedDate = await showDatePicker(
                           context: context, initialDate: DateTime.now(),
-                          firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
+                          firstDate: DateTime(1900), //DateTime.now() - not to allow to choose before today.
                           lastDate: DateTime(2101)
                       );
 
@@ -464,6 +464,7 @@ class _SignUpClientState extends State<SignUpClient> {
                             "role": "Клієнт",
                             "sex": userSex,
                             "email": emailController.text,
+                            "phone": phoneController.text,
                             "ordered tours": FieldValue.arrayUnion([]),
                           };
                           id != null ? widget.database.addNewDocument("Users", userData, id) : widget.database.addNewDocument("Users", userData);

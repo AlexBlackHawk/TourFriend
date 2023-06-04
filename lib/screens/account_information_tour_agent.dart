@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'change_account_data_tour_agent.dart';
@@ -41,6 +42,9 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
   String? sex;
   String? photo;
   String? tourCompany;
+  Timestamp? birthdayTS;
+  DateTime? birthdayDate;
+  late Future<List<DropdownMenuItem<String>>> travelCompan;
 
   Sex getSexOption(String sex) {
     if (sex == "Чоловіча") {
@@ -51,10 +55,30 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
     }
   }
 
+  Future<List<String>> travelCompanies() async {
+    return await widget.database.getAllTourCompanies();
+  }
+
+  Future<List<DropdownMenuItem<String>>> travelCompaniesDropdown() async {
+    List<String> travComp = await travelCompanies();
+    return travComp.map<DropdownMenuItem<String>>((String company) => DropdownMenuItem<String>(
+      value: company,
+      child: Text(
+        company,
+        style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w400,
+            color:Colors.black
+        ),
+      ),
+    )).toList();
+  }
+
   @override
   void initState() {
     super.initState();
     userInfo = widget.database.getUserInfo(widget.userID);
+    travelCompan = travelCompaniesDropdown();
     // setState(() async {
     //   photo = userInfo!["photo"];
     //   name = userInfo!["name"];
@@ -79,22 +103,43 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("ghbjlmk"),
-        automaticallyImplyLeading: false,
-      ),
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: const Text("Аккаунт"),
+          automaticallyImplyLeading: false,
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartScreen();
+                    },
+                  ),
+                );
+                widget.auth.userSignOut();
+              },
+              icon: const Icon(Icons.logout),
+              tooltip: "Вийти",
+            )
+          ],
+        ),
       backgroundColor: Colors.grey.shade300,
       body: FutureBuilder<Map<String, dynamic>>(
         future: userInfo,
         builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
           if (snapshot.hasData) {
-              photo = snapshot.data!["photo"];
+              photo = snapshot.data!["avatar"];
               name = snapshot.data!["name"];
-              birthday = snapshot.data!["birthday"];
+              birthdayTS = snapshot.data!["birthday"];
+              birthdayDate = birthdayTS!.toDate();
+              birthday = intl.DateFormat('dd-MM-yyyy').format(birthdayDate!);
               phone = snapshot.data!["phone"];
               email = snapshot.data!["email"];
               sex = snapshot.data!["sex"];
               tourCompany = snapshot.data!["tour company"];
+              print(tourCompany);
               _option = getSexOption(sex!);
 
               return SingleChildScrollView(
@@ -369,24 +414,55 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
                           const SizedBox(
                             height: 5,
                           ),
-                          DropdownButtonFormField(
-                              decoration: const InputDecoration(
-                                fillColor: Colors.white,
-                                filled: true,
-                                contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                border: OutlineInputBorder(),
-                              ),
-                              validator: (value) => value == null ? "Туристична агенція" : null,
-                              dropdownColor: Colors.white,
-                              value: tourCompany,
-                              onChanged: null,
-                              items: const []
+
+                          FutureBuilder<List<DropdownMenuItem<String>>>(
+                            future: travelCompan,
+                            builder: (BuildContext context, AsyncSnapshot<List<DropdownMenuItem<String>>> snapshot) {
+                              if (snapshot.hasData) {
+                                return DropdownButtonFormField(
+                                    decoration: const InputDecoration(
+                                      fillColor: Colors.white,
+                                      filled: true,
+                                      contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    validator: (value) => value == null ? "Туристичне агентство" : null,
+                                    dropdownColor: Colors.white,
+                                    value: tourCompany,
+                                    onChanged: null,
+                                    items: snapshot.data
+                                );
+                              } else if (snapshot.hasError) {
+                                return const Text('Error');
+                              } else {
+                                return const CircularProgressIndicator();
+                              }
+                            },
                           ),
+
+                          // DropdownButtonFormField(
+                          //     decoration: const InputDecoration(
+                          //       fillColor: Colors.white,
+                          //       filled: true,
+                          //       contentPadding: EdgeInsets.symmetric(vertical: 0,horizontal: 10),
+                          //       enabledBorder: OutlineInputBorder(
+                          //         borderSide: BorderSide(
+                          //           color: Colors.white,
+                          //         ),
+                          //       ),
+                          //       border: OutlineInputBorder(),
+                          //     ),
+                          //     validator: (value) => value == null ? "Туристична агенція" : null,
+                          //     dropdownColor: Colors.white,
+                          //     value: tourCompany,
+                          //     onChanged: null,
+                          //     items: const []
+                          // ),
                         ],
                       ),
                       const SizedBox(

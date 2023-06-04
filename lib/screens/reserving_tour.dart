@@ -6,6 +6,7 @@ import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 
 class ReservingTour extends StatefulWidget {
   final AuthenticationBackend auth;
@@ -80,17 +81,39 @@ class _ReservingTourState extends State<ReservingTour> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: getAppBar(context),
+      appBar: AppBar(
+        leading: const BackButton(),
+        title: const Text("Бронювання"),
+        actions: <Widget>[
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const StartScreen();
+                  },
+                ),
+              );
+              widget.auth.userSignOut();
+            },
+            icon: const Icon(Icons.logout),
+            tooltip: "Вийти",
+          )
+        ],
+      ),
       backgroundColor: Colors.white,
       body: FutureBuilder<Map<String, dynamic>>(
         future: tourInfo,
         builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
           if (snapshot.hasData) {
             tourAgent = snapshot.data!["tour agent"];
+            // print(snapshot.data!["price UAH"].toDouble());
+            // print(snapshot.data!["price UAH"].runtimeType);
             prices = {
-              "Гривні": snapshot.data!["price UAH"],
-              "Долари": snapshot.data!["price USD"],
-              "Євро": snapshot.data!["price EUR"]
+              "Гривні": snapshot.data!["price UAH"].toDouble(),
+              "Долари": snapshot.data!["price USD"].toDouble(),
+              "Євро": snapshot.data!["price EUR"].toDouble()
             };
 
             return SingleChildScrollView(
@@ -153,16 +176,18 @@ class _ReservingTourState extends State<ReservingTour> {
                           height: 5,
                         ),
                         TextField(
-                          onSubmitted: (String val) {
-                            setState(() {
-                              if (dateToController.text.isNotEmpty) {
-                                nights = daysBetween(dateFromController.text, dateToController.text);
-                              }
-                              if (selectedCurrency != null) {
-                                cost = nights! * prices![selectedCurrency!]!;
-                              }
-                            });
-                          },
+                          // onSubmitted: (String val) {
+                          //   setState(() {
+                          //     if (dateToController.text.isNotEmpty) {
+                          //       nights = daysBetween(dateFromController.text, dateToController.text) - 1;
+                          //       print(nights);
+                          //     }
+                          //     if (selectedCurrency != null) {
+                          //       cost = nights! * prices![selectedCurrency!]!;
+                          //       print(cost);
+                          //     }
+                          //   });
+                          // },
                           textAlign: TextAlign.start,
                           decoration: const InputDecoration(
                             fillColor: Colors.white,
@@ -180,7 +205,7 @@ class _ReservingTourState extends State<ReservingTour> {
                           onTap: () async {
                             DateTime? pickedDate = await showDatePicker(
                                 context: context, initialDate: DateTime.now(),
-                                firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
+                                firstDate: DateTime(2023), //DateTime.now() - not to allow to choose before today.
                                 lastDate: DateTime(2101)
                             );
 
@@ -192,6 +217,8 @@ class _ReservingTourState extends State<ReservingTour> {
 
                               setState(() {
                                 dateFromController.text = formattedDate; //set output date to TextField value.
+                                nights = daysBetween(dateFromController.text, dateToController.text) - 1;
+                                cost = nights! * prices![selectedCurrency!]!;
                               });
                             }else{
                               print("Date is not selected");
@@ -220,16 +247,16 @@ class _ReservingTourState extends State<ReservingTour> {
                           height: 5,
                         ),
                         TextField(
-                          onSubmitted: (String val) {
-                            setState(() {
-                              if (dateFromController.text.isNotEmpty) {
-                                nights = daysBetween(dateFromController.text, dateToController.text);
-                              }
-                              if (selectedCurrency != null) {
-                                cost = nights! * prices![selectedCurrency!]!;
-                              }
-                            });
-                          },
+                          // onSubmitted: (String val) {
+                          //   setState(() {
+                          //     if (dateFromController.text.isNotEmpty) {
+                          //       nights = daysBetween(dateFromController.text, dateToController.text) - 1;
+                          //     }
+                          //     if (selectedCurrency != null) {
+                          //       cost = nights! * prices![selectedCurrency!]!;
+                          //     }
+                          //   });
+                          // },
                           textAlign: TextAlign.start,
                           decoration: const InputDecoration(
                             fillColor: Colors.white,
@@ -247,7 +274,7 @@ class _ReservingTourState extends State<ReservingTour> {
                           onTap: () async {
                             DateTime? pickedDate = await showDatePicker(
                                 context: context, initialDate: DateTime.now(),
-                                firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
+                                firstDate: DateTime(2023), //DateTime.now() - not to allow to choose before today.
                                 lastDate: DateTime(2101)
                             );
 
@@ -259,6 +286,12 @@ class _ReservingTourState extends State<ReservingTour> {
 
                               setState(() {
                                 dateToController.text = formattedDate; //set output date to TextField value.
+                                if (dateFromController.text.isNotEmpty) {
+                                  nights = daysBetween(dateFromController.text, dateToController.text) - 1;
+                                }
+                                if (selectedCurrency != null) {
+                                  cost = nights! * prices![selectedCurrency!]!;
+                                }
                               });
                             }else{
                               print("Date is not selected");

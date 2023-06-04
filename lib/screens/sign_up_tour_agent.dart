@@ -87,7 +87,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
         appBarText: "Зареєструватися",
       ),
       backgroundColor: Colors.lightBlue,
-      body: travelCompan != null ? SingleChildScrollView(
+      body: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Container(
           alignment: Alignment.center,
@@ -180,7 +180,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
                     onTap: () async {
                       pickedDate = await showDatePicker(
                           context: context, initialDate: DateTime.now(),
-                          firstDate: DateTime(2000), //DateTime.now() - not to allow to choose before today.
+                          firstDate: DateTime(1900), //DateTime.now() - not to allow to choose before today.
                           lastDate: DateTime(2101)
                       );
 
@@ -514,6 +514,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
                             "sex": userSex,
                             "email": emailController.text,
                             "ordered tours": FieldValue.arrayUnion([]),
+                            "tour company": selectedTourCompany,
                           };
                           id != null ? widget.database.addNewDocument("Users", userData, id) : widget.database.addNewDocument("Users", userData);
                           Navigator.push(
@@ -697,8 +698,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
             ],
           ),
         ),
-      )
-      : Container(),
+      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 import 'tours_added_by_agent.dart';
 import 'agent_tours_reserved_by_clients.dart';
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
@@ -21,7 +22,28 @@ class _TourAgentToursState extends State<TourAgentTours> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors[],
+      appBar: AppBar(
+        leading: const BackButton(),
+        title: const Text("Мої тури"),
+        automaticallyImplyLeading: false,
+        actions: <Widget>[
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const StartScreen();
+                  },
+                ),
+              );
+              widget.auth.userSignOut();
+            },
+            icon: const Icon(Icons.logout),
+            tooltip: "Вийти",
+          )
+        ],
+      ),
       body: DefaultTabController(
         length: 2,
         child: Scaffold(

@@ -4,6 +4,7 @@ import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
 import 'package:travel_agency_work_optimization/backend_storage.dart';
 import 'package:travel_agency_work_optimization/backend_database.dart';
+import 'package:travel_agency_work_optimization/screens/start_screen.dart';
 
 class ClientReservingInfo extends StatefulWidget {
   final AuthenticationBackend auth;
@@ -51,15 +52,41 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Інформація про бронювання"),
-        backgroundColor: Colors.blue,
-      ),
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: const Text("Бронювання"),
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartScreen();
+                    },
+                  ),
+                );
+                widget.auth.userSignOut();
+              },
+              icon: const Icon(Icons.logout),
+              tooltip: "Вийти",
+            )
+          ],
+        ),
       backgroundColor: Colors.white,
         body: FutureBuilder<Map<String, dynamic>>(
           future: reservingInfo,
           builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
             if (snapshot.hasData) {
+              city = snapshot.data!["city"];
+              from = snapshot.data!["from"];
+              to = snapshot.data!["to"];
+              nights = snapshot.data!["nights"];
+              adults = snapshot.data!["adults"];
+              children = snapshot.data!["children"];
+              currency = snapshot.data!["currency"];
+              cost = snapshot.data!["cost"];
+              status = snapshot.data!["status"];
               tourInfo = widget.database.getInfoByReference(snapshot.data!["tour"]);
               userInfo = widget.database.getInfoByReference(snapshot.data!["tour agent"]);
 
@@ -336,10 +363,10 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                           height: 45,
                           width: double.infinity,
                           child: ElevatedButton(
-                              onPressed: () {
+                              onPressed: status == "Не підтверджено" ? () {
                                 Navigator.pop(context);
                                 widget.database.deleteDocument("Reservings", widget.reservingID);
-                              },
+                              } : null,
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.black,
                                   // padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
