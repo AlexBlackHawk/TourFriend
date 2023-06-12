@@ -83,6 +83,7 @@ class _SignUpTourAgentState extends State<SignUpTourAgent> {
   Widget build(BuildContext context) {
     return Scaffold(
       // extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: false,
       appBar: const AppBarSignInUp(
         appBarText: "Зареєструватися",
       ),

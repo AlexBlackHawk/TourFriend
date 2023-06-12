@@ -591,23 +591,56 @@ class _ClientTourInformationState extends State<ClientTourInformation> with Tick
                                         )
                                     ),
                                     onPressed: () {
-                                      String? chatRoom = widget.chat.getChatRoomID(widget.auth.user!.uid, tourAgent!.id) as String?;
-                                      if (chatRoom == null) {
-                                        Map<String, dynamic> chatData = <String, dynamic>{
-                                          'users': [widget.auth.user!.uid, tourAgent!.id],
-                                          'last message': null,
-                                          'time': null,
-                                        };
-                                        chatRoom ??= widget.chat.addChatRoom(chatData) as String?;
-                                      }
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) {
-                                            return Chat(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, chatRoomId: chatRoom!,);
-                                          },
-                                        ),
-                                      );
+                                      String? chatRoom;
+                                      widget.chat.getChatRoomID(widget.auth.user!.uid, tourAgent!.id).then((value) {
+                                        chatRoom = value;
+                                        if (chatRoom == null) {
+                                          Map<String, dynamic> chatData = <String, dynamic>{
+                                            'users': [widget.auth.user!.uid, tourAgent!.id],
+                                            'last message': null,
+                                            'time': null,
+                                          };
+                                          widget.chat.addChatRoom(chatData).then((valueChatID) {
+                                            chatRoom = valueChatID;
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) {
+                                                  return Chat(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, chatRoomId: chatRoom!,);
+                                                },
+                                              ),
+                                            );
+                                          });
+                                        }
+                                        else {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) {
+                                                return Chat(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, chatRoomId: chatRoom!,);
+                                              },
+                                            ),
+                                          );
+                                        }
+                                      });
+
+                                      // String? chatRoom = widget.chat.getChatRoomID(widget.auth.user!.uid, tourAgent!.id);
+                                      // if (chatRoom == null) {
+                                      //   Map<String, dynamic> chatData = <String, dynamic>{
+                                      //     'users': [widget.auth.user!.uid, tourAgent!.id],
+                                      //     'last message': null,
+                                      //     'time': null,
+                                      //   };
+                                      //   chatRoom ??= widget.chat.addChatRoom(chatData) as String?;
+                                      // }
+                                      // Navigator.push(
+                                      //   context,
+                                      //   MaterialPageRoute(
+                                      //     builder: (context) {
+                                      //       return Chat(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, chatRoomId: chatRoom!,);
+                                      //     },
+                                      //   ),
+                                      // );
                                     },
                                     child: const Text("НАПИСАТИ"),
                                   ),

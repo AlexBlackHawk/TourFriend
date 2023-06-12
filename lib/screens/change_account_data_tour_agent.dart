@@ -102,6 +102,7 @@ class _ChangeAccountDataTourAgentState extends State<ChangeAccountDataTourAgent>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           leading: const BackButton(),
           title: const Text("Аккаунт"),

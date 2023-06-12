@@ -38,6 +38,7 @@ class _UserSignInState extends State<UserSignIn> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: false,
       appBar: const AppBarSignInUp(
         appBarText: "Увійти",
       ),

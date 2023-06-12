@@ -10,7 +10,7 @@ class ChatListItem extends StatefulWidget {
   final ChatBackend chat;
   final StorageBackend storage;
   final DatabaseBackend database;
-  final List<String> users;
+  final List<dynamic> users;
   final String lastMessage;
   final String time;
   final String chatRoomID;
@@ -59,7 +59,7 @@ class _ChatListItemState extends State<ChatListItem> {
                     child: Row(
                       children: <Widget>[
                         CircleAvatar(
-                          backgroundImage: NetworkImage(snapshot.data!["photo"]),
+                          backgroundImage: NetworkImage(snapshot.data!["avatar"]),
                           maxRadius: 30,
                         ),
                         const SizedBox(width: 16,),

@@ -33,9 +33,9 @@ class _TourListState extends State<TourList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: const BackButton(),
+        // leading: const BackButton(),
         title: const Text("Тури"),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
         actions: <Widget>[
           IconButton(
             onPressed: () {

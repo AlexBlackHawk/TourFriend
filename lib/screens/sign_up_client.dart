@@ -73,6 +73,7 @@ class _SignUpClientState extends State<SignUpClient> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: const AppBarSignInUp(
         appBarText: "Зареєструватися",
       ),

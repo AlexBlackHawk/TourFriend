@@ -387,6 +387,7 @@ class _EditingTourState extends State<EditingTour> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           leading: const BackButton(),
           title: const Text("Редагування туру"),

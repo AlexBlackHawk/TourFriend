@@ -43,11 +43,6 @@ class _MessageItemState extends State<MessageItem> {
               const SizedBox(
                 width: 10,
               ),
-              const Icon(
-                Icons.check_circle,
-                color: Color.fromARGB(255, 35, 156, 255),
-                size: 14,
-              )
             ]),
       );
     }

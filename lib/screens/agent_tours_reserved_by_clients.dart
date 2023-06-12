@@ -115,11 +115,10 @@ class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
               return ListView.builder(
                 itemCount: snapshotUser.data!["ordered tours"].length, // тут ідентифікатори резервувань, не турів
                 itemBuilder: (BuildContext context, int index) {
-                  String idReserve = snapshotUser.data!["ordered tours"][index];
-                  DocumentReference docRefTour = widget.database.db.doc("Tours/$idReserve");
-                  Future<Map<String, dynamic>> tourInfo = widget.database.getInfoByReference(docRefTour);
+                  DocumentReference userReserve = snapshotUser.data!["ordered tours"][index];
+                  Future<Map<String, dynamic>> reserveInfo = widget.database.getInfoByReference(userReserve);
                   return FutureBuilder<Map<String, dynamic>>(
-                    future: tourInfo,
+                    future: reserveInfo,
                     builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotReserve) {
                       if (snapshotReserve.hasData) {
                         Future<Map<String, dynamic>> tourData = widget.database.getInfoByReference(snapshotReserve.data!["tour"]);
@@ -130,97 +129,164 @@ class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
                               String city = snapshotTour.data!['city'];
                               String country = snapshotTour.data!['country'];
                               String name = snapshotTour.data!['name'];
-                              String photo = snapshotTour.data!['photo'][0];
+                              String photo = snapshotTour.data!['photos'][0];
                               Future<Map<String, dynamic>> clientData = widget.database.getInfoByReference(snapshotReserve.data!["client"]);
-                              return GestureDetector(
-                                onTap: (){
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) {
-                                        return TourAgentReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: idReserve,);
-                                      },
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.only(left: 16,right: 16,top: 10,bottom: 10),
-                                  child: Row(
-                                    children: <Widget>[
-                                      Expanded(
-                                        child: Row(
-                                          children: <Widget>[
-                                            Image(image: NetworkImage(photo),),
-                                            const SizedBox(width: 16,),
-                                            Expanded(
-                                              child: Container(
-                                                color: Colors.transparent,
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: <Widget>[
-                                                    Expanded(
-                                                      child: Text(name, style: const TextStyle(fontSize: 16),),
-                                                    ),
-                                                    const SizedBox(height: 6,),
-                                                    Expanded(
-                                                      child: Text("$city, $country ",style: TextStyle(fontSize: 13,color: Colors.grey.shade600, fontWeight: FontWeight.normal),),
-                                                    ),
-                                                  ],
-                                                ),
+                              return FutureBuilder<Map<String, dynamic>>(
+                                future: clientData,
+                                builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> clientSnapshot) {
+                                  if (clientSnapshot.hasData) {
+                                    return ListTile(
+                                      leading: Image(image: NetworkImage(photo),),
+                                      title: Expanded(
+                                        child: Text(name),
+                                      ),
+                                      subtitle: Row(
+                                        children: <Widget>[
+                                          const Icon(
+                                            Icons.place,
+                                            color: Colors.black,
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              "$city, $country",
+                                              style: const TextStyle(
+                                                color: Colors.black,
                                               ),
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                      FutureBuilder<Map<String, dynamic>>(
-                                        future: clientData,
-                                        builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotClient) {
-                                          if (snapshotClient.hasData) {
-                                            return Container(
-                                              color: Colors.white,
-                                              child: Column(
-                                                  children: <Widget> [
-                                                    Expanded(
-                                                      child: CircleAvatar(
-                                                        backgroundImage: NetworkImage(snapshotClient.data!["avatar"]),
-                                                      ),
-                                                    ),
-                                                    Expanded(
-                                                      child: Text(
-                                                        snapshotClient.data!["name"],
-                                                      ),
-                                                    ),
-                                                  ]
-                                              ),
-                                            );
-                                          } else if (snapshotClient.hasError) {
-                                            return const Text('Error');
-                                            // return const Center(
-                                            //   child: Text('Error'),
-                                            // );
-                                          } else {
-                                            return const CircularProgressIndicator();
-                                            // return Center(
-                                            //   child: Column(
-                                            //     children: const [
-                                            //       SizedBox(
-                                            //         width: 60,
-                                            //         height: 60,
-                                            //         child: CircularProgressIndicator(),
-                                            //       ),
-                                            //       Padding(
-                                            //         padding: EdgeInsets.only(top: 16),
-                                            //         child: Text('Awaiting result...'),
-                                            //       ),
-                                            //     ],
-                                            //   ),
-                                            // );
-                                          }
-                                        },
+                                      trailing: Column(
+                                        children: [
+                                          CircleAvatar(radius: 20, backgroundImage: NetworkImage(clientSnapshot.data!["avatar"])),
+                                          Expanded(child: Text(clientSnapshot.data!["name"])),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                ),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) {
+                                              return TourAgentReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: userReserve.id,);
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    );
+
+                                    // return GestureDetector(
+                                    //   onTap: (){
+                                    //     Navigator.push(
+                                    //       context,
+                                    //       MaterialPageRoute(
+                                    //         builder: (context) {
+                                    //           return TourAgentReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: userReserve.id,);
+                                    //         },
+                                    //       ),
+                                    //     );
+                                    //   },
+                                    //   child: Container(
+                                    //     padding: const EdgeInsets.only(left: 16,right: 16,top: 10,bottom: 10),
+                                    //     child: Row(
+                                    //       children: <Widget>[
+                                    //         Expanded(
+                                    //           child: Row(
+                                    //             children: <Widget>[
+                                    //               Image(image: NetworkImage(photo),),
+                                    //               const SizedBox(width: 16,),
+                                    //               Expanded(
+                                    //                 child: Container(
+                                    //                   color: Colors.transparent,
+                                    //                   child: Column(
+                                    //                     crossAxisAlignment: CrossAxisAlignment.start,
+                                    //                     children: <Widget>[
+                                    //                       Expanded(
+                                    //                         child: Text(name, style: const TextStyle(fontSize: 16),),
+                                    //                       ),
+                                    //                       const SizedBox(height: 6,),
+                                    //                       Expanded(
+                                    //                         child: Text("$city, $country ",style: TextStyle(fontSize: 13,color: Colors.grey.shade600, fontWeight: FontWeight.normal),),
+                                    //                       ),
+                                    //                     ],
+                                    //                   ),
+                                    //                 ),
+                                    //               ),
+                                    //             ],
+                                    //           ),
+                                    //         ),
+                                    //         Container(
+                                    //           color: Colors.white,
+                                    //           child: Column(
+                                    //               children: <Widget> [
+                                    //                 Expanded(
+                                    //                   child: CircleAvatar(
+                                    //                     backgroundImage: NetworkImage(clientSnapshot.data!["avatar"]),
+                                    //                   ),
+                                    //                 ),
+                                    //                 Expanded(
+                                    //                   child: Text(
+                                    //                     clientSnapshot.data!["name"],
+                                    //                   ),
+                                    //                 ),
+                                    //               ]
+                                    //           ),
+                                    //         )
+                                    //         // FutureBuilder<Map<String, dynamic>>(
+                                    //         //   future: clientData,
+                                    //         //   builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotClient) {
+                                    //         //     if (snapshotClient.hasData) {
+                                    //         //       return Container(
+                                    //         //         color: Colors.white,
+                                    //         //         child: Column(
+                                    //         //             children: <Widget> [
+                                    //         //               Expanded(
+                                    //         //                 child: CircleAvatar(
+                                    //         //                   backgroundImage: NetworkImage(snapshotClient.data!["avatar"]),
+                                    //         //                 ),
+                                    //         //               ),
+                                    //         //               Expanded(
+                                    //         //                 child: Text(
+                                    //         //                   snapshotClient.data!["name"],
+                                    //         //                 ),
+                                    //         //               ),
+                                    //         //             ]
+                                    //         //         ),
+                                    //         //       );
+                                    //         //     } else if (snapshotClient.hasError) {
+                                    //         //       return const Text('Error');
+                                    //         //       // return const Center(
+                                    //         //       //   child: Text('Error'),
+                                    //         //       // );
+                                    //         //     } else {
+                                    //         //       return const CircularProgressIndicator();
+                                    //         //       // return Center(
+                                    //         //       //   child: Column(
+                                    //         //       //     children: const [
+                                    //         //       //       SizedBox(
+                                    //         //       //         width: 60,
+                                    //         //       //         height: 60,
+                                    //         //       //         child: CircularProgressIndicator(),
+                                    //         //       //       ),
+                                    //         //       //       Padding(
+                                    //         //       //         padding: EdgeInsets.only(top: 16),
+                                    //         //       //         child: Text('Awaiting result...'),
+                                    //         //       //       ),
+                                    //         //       //     ],
+                                    //         //       //   ),
+                                    //         //       // );
+                                    //         //     }
+                                    //         //   },
+                                    //         // ),
+                                    //       ],
+                                    //     ),
+                                    //   ),
+                                    // );
+                                  } else if (clientSnapshot.hasError) {
+                                    return const Text('Error');
+                                  } else {
+                                    return const CircularProgressIndicator();
+                                  }
+                                },
                               );
                             } else if (snapshotTour.hasError) {
                               return const Text('Error');
@@ -245,50 +311,18 @@ class _AgentToursReservedClientsState extends State<AgentToursReservedClients> {
                           },
                         );
                       } else if (snapshotUser.hasError) {
-                        return const Center(
-                          child: Text('Error'),
-                        );
+                        return const Text('');
                       } else {
-                        return Center(
-                          child: Column(
-                            children: const [
-                              SizedBox(
-                                width: 60,
-                                height: 60,
-                                child: CircularProgressIndicator(),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(top: 16),
-                                child: Text('Awaiting result...'),
-                              ),
-                            ],
-                          ),
-                        );
+                        return const Text('');
                       }
                     },
                   );
                 },
               );
             } else if (snapshotUser.hasError) {
-              return const Center(
-                child: Text('Error'),
-              );
+              return const Text('');
             } else {
-              return Center(
-                child: Column(
-                  children: const [
-                    SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: CircularProgressIndicator(),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 16),
-                      child: Text('Awaiting result...'),
-                    ),
-                  ],
-                ),
-              );
+              return const Text('');
             }
           },
         )

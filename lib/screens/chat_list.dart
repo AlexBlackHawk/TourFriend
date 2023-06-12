@@ -36,7 +36,7 @@ class _ChatListState extends State<ChatList> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          leading: const BackButton(),
+          //leading: const BackButton(),
           title: const Text("Чати"),
           automaticallyImplyLeading: false,
           actions: <Widget>[
@@ -73,6 +73,8 @@ class _ChatListState extends State<ChatList> {
               itemCount: snapshot.data!.docs.length,
               shrinkWrap: true,
               itemBuilder: (context, index) {
+                Timestamp lastMessageTS = snapshot.data!.docs[index]["time"];
+                DateTime lastMessageDate = lastMessageTS.toDate();
                 return ChatListItem(
                   auth: widget.auth,
                   chat: widget.chat,
@@ -80,7 +82,7 @@ class _ChatListState extends State<ChatList> {
                   database: widget.database,
                   users: snapshot.data!.docs[index]["users"],
                   lastMessage: snapshot.data!.docs[index]["last message"],
-                  time: getTime(snapshot.data!.docs[index]["time"]),
+                  time: getTime(lastMessageDate),
                   chatRoomID: snapshot.data!.docs[index].id,
                 );
               },

@@ -29,7 +29,7 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
   int? adults;
   int? children;
   String? currency;
-  int? cost;
+  double? cost;
   String? status;
 
   @override
@@ -141,7 +141,7 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                                   bottom: 16,
                                   left: 11,
                                 ),
-                                child: Text("ПІБ клієнта", style: TextStyle(fontSize: 15.0),),
+                                child: Text("ПІБ турагента", style: TextStyle(fontSize: 15.0),),
                               ),
                               FutureBuilder<Map<String, dynamic>>(
                                 future: userInfo,
@@ -333,7 +333,7 @@ class _ClientReservingInfoState extends State<ClientReservingInfo> {
                                   bottom: 16,
                                   left: 11,
                                 ),
-                                child: Text(intl.NumberFormat.simpleCurrency(locale: 'uk_UA').format(cost!.toString()), style: const TextStyle(fontSize: 15.0),),
+                                child: Text(intl.NumberFormat.simpleCurrency(locale: currency == "Гривні" ? 'uk_UA' : currency == "Долари" ? 'en_US' : 'de_DE').format(cost!), style: const TextStyle(fontSize: 15.0),),
                               ),
                             ]),
                             TableRow(children: [

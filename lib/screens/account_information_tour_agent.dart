@@ -104,7 +104,7 @@ class _AccountInformationTourAgentState extends State<AccountInformationTourAgen
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          leading: const BackButton(),
+          //leading: const BackButton(),
           title: const Text("Аккаунт"),
           automaticallyImplyLeading: false,
           actions: <Widget>[

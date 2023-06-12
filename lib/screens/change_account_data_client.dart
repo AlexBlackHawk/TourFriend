@@ -99,6 +99,7 @@ class _ChangeAccountDataClientState extends State<ChangeAccountDataClient> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           leading: const BackButton(),
           title: const Text("Аккаунт"),

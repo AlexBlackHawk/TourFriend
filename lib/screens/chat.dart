@@ -30,7 +30,7 @@ class _ChatState extends State<Chat> {
   @override
   void initState() {
     super.initState();
-    chatRoom = widget.database.getChatRoomInfo(widget.chatRoomId);
+    chatRoom = widget.chat.getChatRoomInfo(widget.chatRoomId);
     chats = widget.chat.getChats(widget.chatRoomId);
     // setState(() async {
     //   for (var i = 0; i < chatRoom!["users"].length; i++){
@@ -49,22 +49,29 @@ class _ChatState extends State<Chat> {
 
   // handle send message
   void handleSendMessage() {
+    print("1");
     if (chatInputController.text.isNotEmpty) {
+      print("2");
       String id = widget.auth.user!.uid;
+      print("3");
       Map<String, dynamic> chatMessageMap = {
         "sendBy": id,
         "message": chatInputController.text,
-        'time': DateTime
-            .now()
-            .millisecondsSinceEpoch,
+        'time': Timestamp.fromDate(DateTime.now()),
       };
+      print("4");
 
       widget.chat.addMessage(widget.chatRoomId, chatMessageMap);
+      print("5");
 
       setState(() {
+        print("6");
         chatInputController.text = "";
+        print("7");
       });
+      print("8");
     }
+    print("9");
   }
 
   @override
@@ -72,25 +79,31 @@ class _ChatState extends State<Chat> {
     return Scaffold(
       appBar: getAppBar(),
       backgroundColor: Colors.white,
-      body: StreamBuilder<QuerySnapshot>(
-        stream: chats,
-        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (snapshot.hasError) {
-            return const Text('Something went wrong');
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("Loading");
-          }
-
-          return Stack(
-            children: <Widget>[
-              messagesList(),
-              bottomTextBox(),
-            ],
-          );
-        },
+      body: Stack(
+        children: <Widget>[
+          messagesList(),
+          bottomTextBox(),
+        ],
       )
+      // StreamBuilder<QuerySnapshot>(
+      //   stream: chats,
+      //   builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+      //     if (snapshot.hasError) {
+      //       return const Text('Something went wrong');
+      //     }
+      //
+      //     if (snapshot.connectionState == ConnectionState.waiting) {
+      //       return const Text("Loading");
+      //     }
+      //
+      //     return Stack(
+      //       children: <Widget>[
+      //         messagesList(),
+      //         bottomTextBox(),
+      //       ],
+      //     );
+      //   },
+      // )
     );
   }
 
@@ -211,24 +224,49 @@ class _ChatState extends State<Chat> {
             future: userData,
             builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotUser) {
               if (snapshotUser.hasData) {
-                return StreamBuilder(
+                return StreamBuilder<QuerySnapshot>(
                   stream: chats,
-                  builder: (context, snapshot) {
-                    return snapshot.hasData ? ListView.builder(
-                      itemCount: snapshot.data!.docs.length,
+                  builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> chatSnapshot) {
+                    if (chatSnapshot.hasError) {
+                      return const Text('Something went wrong');
+                    }
+
+                    if (chatSnapshot.connectionState == ConnectionState.waiting) {
+                      return const Text("Loading");
+                    }
+
+                    return ListView.builder(
+                      itemCount: chatSnapshot.data!.docs.length,
                       itemBuilder: (context, index) {
-                        bool sendByMe = widget.auth.user!.uid == snapshot.data!.docs[index]["sendBy"];
+                        bool sendByMe = widget.auth.user!.uid == chatSnapshot.data!.docs[index]["sendBy"];
                         return MessageItem(
                           auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,
-                          message: snapshot.data!.docs[index]["message"],
+                          message: chatSnapshot.data!.docs[index]["message"],
                           senderMe: sendByMe,
                           photo: sendByMe ? null : snapshotUser.data!["avatar"],
                         );
                       },
-                    )
-                        : Container();
+                    );
                   },
                 );
+                // return StreamBuilder(
+                //   stream: chats,
+                //   builder: (context, snapshot) {
+                //     return snapshot.hasData ? ListView.builder(
+                //       itemCount: snapshot.data!.docs.length,
+                //       itemBuilder: (context, index) {
+                //         bool sendByMe = widget.auth.user!.uid == snapshot.data!.docs[index]["sendBy"];
+                //         return MessageItem(
+                //           auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database,
+                //           message: snapshot.data!.docs[index]["message"],
+                //           senderMe: sendByMe,
+                //           photo: sendByMe ? null : snapshotUser.data!["avatar"],
+                //         );
+                //       },
+                //     )
+                //         : Container();
+                //   },
+                // );
               } else if (snapshotUser.hasError) {
                 return const Center(
                   child: Text('Error'),
@@ -284,7 +322,7 @@ class _ChatState extends State<Chat> {
         padding: const EdgeInsets.only(left: 10,bottom: 10,top: 10),
         height: 60,
         width: double.infinity,
-        color: Colors.white,
+        color: Colors.lightBlue,
         child: Row(
           children: <Widget>[
             // GestureDetector(
@@ -301,9 +339,10 @@ class _ChatState extends State<Chat> {
             //   ),
             // ),
             const SizedBox(width: 15,),
-            const Expanded(
+            Expanded(
               child: TextField(
-                decoration: InputDecoration(
+                controller: chatInputController,
+                decoration: const InputDecoration(
                     hintText: "Write message...",
                     hintStyle: TextStyle(color: Colors.black54),
                     border: InputBorder.none

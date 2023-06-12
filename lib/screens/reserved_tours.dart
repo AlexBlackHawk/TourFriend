@@ -105,15 +105,17 @@ class _ReservedToursState extends State<ReservedTours> {
             return ListView.builder(
               itemCount: snapshotUser.data!["ordered tours"].length,
               itemBuilder: (BuildContext context, int index) {
-                Future<Map<String, dynamic>> tourInfo = widget.database.getInfoByReference(snapshotUser.data!["favorite tours"][index]);
+                DocumentReference userReserve = snapshotUser.data!["ordered tours"][index];
+                Future<Map<String, dynamic>> reserveInfo = widget.database.getInfoByReference(userReserve);
                 return FutureBuilder(
-                  future: tourInfo,
-                  builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotTour) {
-                    if (snapshotTour.hasData) {
-                      String idReserve = snapshotUser.data!["ordered tours"][index];
-                      DocumentReference docRefTour = widget.database.db.doc("Tours/$idReserve");
-                      Future<Map<String, dynamic>> tourInfo = widget.database.getInfoByReference(docRefTour);
+                  future: reserveInfo,
+                  builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotReserve) {
+                    if (snapshotReserve.hasData) {
+                      // String idReserve = snapshotUser.data!["ordered tours"][index];
+                      DocumentReference tour = snapshotReserve.data!["tour"];
+                      Future<Map<String, dynamic>> tourInfo = widget.database.getInfoByReference(tour);
 
+                      print("return FutureBuilder<Map<String, dynamic>>");
                       return FutureBuilder<Map<String, dynamic>>(
                         future: tourInfo,
                         builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotTour) {
@@ -121,8 +123,8 @@ class _ReservedToursState extends State<ReservedTours> {
                             String city = snapshotTour.data!['city'];
                             String country = snapshotTour.data!['country'];
                             String name = snapshotTour.data!['name'];
-                            String photo = snapshotTour.data!['photo'][0];
-                            bool isSaved = snapshotUser.data!["ordered tours"].contain(idReserve);
+                            String photo = snapshotTour.data!['photos'][0];
+                            bool isSaved = snapshotUser.data!["favorite tours"].contains(tour.id);
 
                             return ListTile(
                               leading: Image(image: NetworkImage(photo),),
@@ -151,12 +153,12 @@ class _ReservedToursState extends State<ReservedTours> {
                                     setState(() {
                                       if (isSaved) {
                                         widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
-                                          "favorite tours": FieldValue.arrayUnion([idReserve])
+                                          "favorite tours": FieldValue.arrayUnion([tour.id])
                                         });
                                       }
                                       else {
                                         widget.database.db.collection("Users").doc(widget.auth.user!.uid).update({
-                                          "favorite tours": FieldValue.arrayRemove([idReserve])
+                                          "favorite tours": FieldValue.arrayRemove([tour.id])
                                         });
                                       }
                                     });
@@ -168,7 +170,7 @@ class _ReservedToursState extends State<ReservedTours> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) {
-                                      return ClientReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: idReserve,);
+                                      return ClientReservingInfo(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database, reservingID: userReserve.id,);
                                     },
                                   ),
                                 );
@@ -181,8 +183,10 @@ class _ReservedToursState extends State<ReservedTours> {
                           }
                         },
                       );
-                    } else if (snapshotTour.hasError) {
-                      return const Text('Error');
+                    } else if (snapshotReserve.hasError) {
+                      print("return const Text('Error22');");
+                      return const Text('');
+                      // return const Text('Error22');
                     } else {
                       return const CircularProgressIndicator();
                     }

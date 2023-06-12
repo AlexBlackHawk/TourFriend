@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:travel_agency_work_optimization/screens/adding_tour.dart';
 import 'agent_tour_information.dart';
 import 'package:travel_agency_work_optimization/backend_authentication.dart';
 import 'package:travel_agency_work_optimization/backend_chat.dart';
@@ -160,6 +161,20 @@ class _ToursAddedAgentState extends State<ToursAddedAgent> {
             }
           },
         ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return AddingTour(auth: widget.auth, chat: widget.chat, storage: widget.storage, database: widget.database);
+              }
+            ),
+          );
+        },
+        backgroundColor: Colors.orange,
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

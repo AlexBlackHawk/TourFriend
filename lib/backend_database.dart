@@ -54,19 +54,8 @@ class DatabaseBackend extends ChangeNotifier{
   }
 
   Future<Map<String, dynamic>> getReservingInfo(String reservingID) async {
-    DocumentReference reservingDocument = db.collection("Reservings").doc(reservingID);
+    DocumentReference reservingDocument = db.collection("Reservations").doc(reservingID);
     DocumentSnapshot snapshot = await reservingDocument.get();
-
-    if (snapshot.exists) {
-      return snapshot.data() as Map<String, dynamic>;
-    } else {
-      throw Exception('Document does not exist');
-    }
-  }
-
-  Future<Map<String, dynamic>> getChatRoomInfo(String chatRoomID) async {
-    DocumentReference chatRoomDocument = db.collection("Chats").doc(chatRoomID);
-    DocumentSnapshot snapshot = await chatRoomDocument.get();
 
     if (snapshot.exists) {
       return snapshot.data() as Map<String, dynamic>;

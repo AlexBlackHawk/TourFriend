@@ -105,7 +105,9 @@ class _WishListState extends State<WishList> {
               return ListView.builder(
                 itemCount: snapshotUser.data!["favorite tours"].length,
                 itemBuilder: (BuildContext context, int index) {
-                  Future<Map<String, dynamic>> tourInfo = widget.database.getInfoByReference(snapshotUser.data!["favorite tours"][index]);
+                  String favoriteTourID = snapshotUser.data!["favorite tours"][index];
+                  DocumentReference favTourDocRef = widget.database.db.doc("Tours/$favoriteTourID");
+                  Future<Map<String, dynamic>> tourInfo = widget.database.getInfoByReference(favTourDocRef);
                   return FutureBuilder<Map<String, dynamic>>(
                     future: tourInfo,
                     builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshotTour) {
@@ -113,8 +115,8 @@ class _WishListState extends State<WishList> {
                         String city = snapshotTour.data!['city'];
                         String country = snapshotTour.data!['country'];
                         String name = snapshotTour.data!['name'];
-                        String photo = snapshotTour.data!['photo'][0];
-                        bool isSaved = snapshotUser.data!["favorite tours"].contain(snapshotUser.data!["favorite tours"][index]);
+                        String photo = snapshotTour.data!['photos'][0];
+                        bool isSaved = snapshotUser.data!["favorite tours"].contains(snapshotUser.data!["favorite tours"][index]);
 
                         return ListTile(
                           leading: Image(image: NetworkImage(photo),),

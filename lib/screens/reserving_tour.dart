@@ -27,8 +27,8 @@ class _ReservingTourState extends State<ReservingTour> {
   late Future<Map<String, dynamic>> tourInfo;
   String? selectedCurrency;
   int? nights;
-  double? adults;
-  double? children;
+  int? adults;
+  int? children;
   DocumentReference? tourAgent;
   Map<String, double>? prices;
   // = {
@@ -81,6 +81,7 @@ class _ReservingTourState extends State<ReservingTour> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: const BackButton(),
         title: const Text("Бронювання"),
@@ -350,7 +351,7 @@ class _ReservingTourState extends State<ReservingTour> {
                           max: 100,
                           value: 1,
                           // decoration: InputDecoration(labelText: 'Basic'),
-                          onChanged: (value) => adults = value,
+                          onChanged: (value) => adults = value.toInt(),
                         ),
                         const SizedBox(
                           height: 5.0,
@@ -390,7 +391,7 @@ class _ReservingTourState extends State<ReservingTour> {
                           max: 100,
                           value: 0,
                           // decoration: InputDecoration(labelText: 'Basic'),
-                          onChanged: (value) => children = value,
+                          onChanged: (value) => children = value.toInt(),
                         ),
                         const SizedBox(
                           height: 5,

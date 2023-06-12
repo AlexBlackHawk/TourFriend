@@ -172,11 +172,26 @@ class ChatBackend extends ChangeNotifier {
     return db.collection("Chat rooms").doc(chatRoomId).collection("Chats").orderBy('time').snapshots();
   }
 
+  Future<Map<String, dynamic>> getChatRoomInfo(String chatRoomID) async {
+    DocumentReference chatRoomDocument = db.collection("Chat rooms").doc(chatRoomID);
+    DocumentSnapshot snapshot = await chatRoomDocument.get();
 
-  Future<void> addMessage(String chatRoomId, chatMessageData) async {
+    if (snapshot.exists) {
+      return snapshot.data() as Map<String, dynamic>;
+    } else {
+      throw Exception('Document does not exist');
+    }
+  }
+
+  Future<void> addMessage(String chatRoomId, Map<String, dynamic> chatMessageData) async {
     db.collection("Chat rooms").doc(chatRoomId).collection("Chats").add(chatMessageData).catchError((e) {
       print(e.toString());
     });
+    Map<String, dynamic> dataUpdate = <String, dynamic>{
+      "last message": chatMessageData["message"],
+      "time": chatMessageData["time"]
+    };
+    db.collection("Chat rooms").doc(chatRoomId).update(dataUpdate);
   }
 
   Stream<QuerySnapshot> getUserChats(String itIsMyName) {
@@ -185,10 +200,40 @@ class ChatBackend extends ChangeNotifier {
 
   Future<String?> getChatRoomID(String firstUser, String secondUser) async {
     String? id;
-    QuerySnapshot chatDocument = await db.collection("Chat rooms").where("users", arrayContains: firstUser).where("users", arrayContains: secondUser).get();
-      if(chatDocument.docs.isNotEmpty) {
-        id = chatDocument.docs[0].id;
+    List<String> firstVariant = <String> [
+      firstUser,
+      secondUser
+    ];
+    List<String> secondVariant = <String> [
+      secondUser,
+      firstUser
+    ];
+    var firstChatDocument = await db.collection("Chat rooms").where("users", isEqualTo: firstVariant).get();
+    if (firstChatDocument.docs.isNotEmpty) {
+      id = firstChatDocument.docs[0].id;
+      return id;
+    }
+    else {
+      var secondChatDocument = await db.collection("Chat rooms").where("users", isEqualTo: secondVariant).get();
+      if (secondChatDocument.docs.isNotEmpty) {
+        id = secondChatDocument.docs[0].id;
+        return id;
       }
+      else {
+        return null;
+      }
+    }
+    // Map<String, bool> usersMap = <String, bool> {
+    //   firstUser: true,
+    //   secondUser: true
+    // };
+    // print(firstUser);
+    // print(secondUser);
+    // var chatDocument = await db.collection("Chat rooms").where("usersMap.firstUser", isEqualTo: true).where("usersMap.secondUser", isEqualTo: true).get();
+    // print(chatDocument.docs);
+    // if(chatDocument.docs.isNotEmpty) {
+    //   id = chatDocument.docs[0].id;
+    // }
     return id;
   }
 }

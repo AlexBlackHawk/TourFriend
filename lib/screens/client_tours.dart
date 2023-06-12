@@ -23,40 +23,60 @@ class _ClientToursState extends State<ClientTours> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: const BackButton(),
-        title: const Text("Мої тури"),
-        automaticallyImplyLeading: false,
-        actions: <Widget>[
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const StartScreen();
-                  },
-                ),
-              );
-              widget.auth.userSignOut();
-            },
-            icon: const Icon(Icons.logout),
-            tooltip: "Вийти",
-          )
-        ],
-      ),
+      // appBar: AppBar(
+      //   leading: const BackButton(),
+      //   title: const Text("Мої тури"),
+      //   automaticallyImplyLeading: false,
+      //   actions: <Widget>[
+      //     IconButton(
+      //       onPressed: () {
+      //         Navigator.push(
+      //           context,
+      //           MaterialPageRoute(
+      //             builder: (context) {
+      //               return const StartScreen();
+      //             },
+      //           ),
+      //         );
+      //         widget.auth.userSignOut();
+      //       },
+      //       icon: const Icon(Icons.logout),
+      //       tooltip: "Вийти",
+      //     )
+      //   ],
+      // ),
       body: DefaultTabController(
         length: 2,
         child: Scaffold(
           appBar: AppBar(
+            // leading: const BackButton(),
+            title: const Text("Мої тури"),
+            automaticallyImplyLeading: false,
+            actions: <Widget>[
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return const StartScreen();
+                      },
+                    ),
+                  );
+                  widget.auth.userSignOut();
+                },
+                icon: const Icon(Icons.logout),
+                tooltip: "Вийти",
+              )
+            ],
             bottom: const TabBar(
               tabs: [
                 Tab(text: "Заброньовані тури"),
                 Tab(text: "Список бажань")
               ],
             ),
-            title: const Text("Мої тури"),
-            automaticallyImplyLeading: false,
+            // title: const Text("Мої тури"),
+            // automaticallyImplyLeading: false,
           ),
           body: TabBarView(
             children: [

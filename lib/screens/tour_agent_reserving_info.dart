@@ -32,7 +32,7 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
   int? adults;
   int? children;
   String? currency;
-  int? cost;
+  double? cost;
   String? status;
 
   @override
@@ -340,7 +340,7 @@ class _TourAgentReservingInfoState extends State<TourAgentReservingInfo> {
                                   bottom: 16,
                                   left: 11,
                                 ),
-                                child: Text(intl.NumberFormat.simpleCurrency(locale: 'uk_UA').format(cost!.toString()), style: const TextStyle(fontSize: 15.0),),
+                                child: Text(intl.NumberFormat.simpleCurrency(locale: currency == "Гривні" ? 'uk_UA' : currency == "Долари" ? 'en_US' : 'de_DE').format(cost!), style: const TextStyle(fontSize: 15.0),),
                               ),
                             ]),
                             TableRow(children: [
